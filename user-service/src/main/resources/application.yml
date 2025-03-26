@@ -1,0 +1,28 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+
+  profiles:
+    include: dotenv
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/userdb?useSSL=false&serverTimezone=UTC
+    username: ${USERDB_USERNAME}
+    password: ${USERDB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format-sql: true
+
+logging:
+  level:
+    org.springframework: INFO
+    com.gazpacho.userservice: DEBUG
