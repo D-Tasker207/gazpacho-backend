@@ -14,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,17 +22,17 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_email", columnList = "email")
+})
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username;
-    private String passwordHash;
-
     @Column(unique = true)
     private String email;
+    private String passwordHash;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_saved_recipes", joinColumns = @JoinColumn(name = "user_id"))
