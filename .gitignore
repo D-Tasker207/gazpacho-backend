@@ -1,0 +1,53 @@
+# Compiled class files
+target/
+*.class
+
+# Maven's local repository (optional)
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse/STS
+.project
+.classpath
+.settings/
+.springBeans
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment-specific files
+.env
+
+# Build artifacts
+*.war
+*.jar
+
+# Temporary files
+*.swp
+*.bak
+*.tmp
+*.~*
+
+# Spring Boot devtools file
+.spring-boot-devtools.properties
