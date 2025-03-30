@@ -2,6 +2,7 @@ package com.gazpacho.userservice.service;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
 import com.gazpacho.sharedlib.dto.PublicUserDTO;
+import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
 import java.util.List;
@@ -29,7 +30,7 @@ public class UserService {
     return new PublicUserDTO(user.getEmail(), user.getSavedRecipeIds());
   }
 
-  public Optional<String> loginUser(LoginDTO userDto) {
+  public Optional<TokenResponseDTO> loginUser(LoginDTO userDto) {
     return null; // return JWT
   }
 
