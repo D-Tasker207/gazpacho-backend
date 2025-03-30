@@ -1,48 +1,55 @@
 package com.gazpacho.userservice.service;
 
-import com.gazpacho.userservice.repository.UserRepository;
-import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.sharedlib.dto.LoginDTO;
 import com.gazpacho.sharedlib.dto.PublicUserDTO;
-
-import org.springframework.stereotype.Service;
-
+import com.gazpacho.userservice.model.UserEntity;
+import com.gazpacho.userservice.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+  public UserService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
-    public PublicUserDTO registerUser(LoginDTO newUser) {
-        return null;
-    }
+  public PublicUserDTO registerUser(LoginDTO newUser) {
+    if (userRepository.existsByEmail(newUser.getEmail()))
+      throw new IllegalArgumentException("Email is already in use");
 
-    public Optional<String> loginUser(LoginDTO userDto) {
-        return null; // return JWT
-    }
+    UserEntity user = new UserEntity();
+    user.setEmail(newUser.getEmail());
+    user.setPassword(newUser.getPassword()); // TODO: Add password hashing
 
-    public Optional<PublicUserDTO> getUserByEmail(String email) {
-        return null;
-    }
+    userRepository.save(user);
 
-    public Optional<PublicUserDTO> getUserById(Long id) {
-        return null;
-    }
+    return new PublicUserDTO(user.getEmail(), user.getSavedRecipeIds());
+  }
 
-    public void saveRecipeForUser(Long userId, Long recipeId) {
-        return;
-    }
+  public Optional<String> loginUser(LoginDTO userDto) {
+    return null; // return JWT
+  }
 
-    public void removeSavedRecipe(Long userId, Long recipeId) {
-        return;
-    }
+  public Optional<PublicUserDTO> getUserByEmail(String email) {
+    return null;
+  }
 
-    public List<Long> getSavedRecipiesById(Long userId) {
-        return null;
-    }
+  public Optional<PublicUserDTO> getUserById(Long id) {
+    return null;
+  }
+
+  public void saveRecipeForUser(Long userId, Long recipeId) {
+    return;
+  }
+
+  public void removeSavedRecipe(Long userId, Long recipeId) {
+    return;
+  }
+
+  public List<Long> getSavedRecipiesById(Long userId) {
+    return null;
+  }
 }
