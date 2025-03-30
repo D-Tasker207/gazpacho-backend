@@ -28,11 +28,12 @@ public class RecipeControllerTest {
 
     @Test
     void testViewRecipe() throws Exception {
+        long testID = 1L;
         RecipeEntity recipe = new RecipeEntity();
-        recipe.setId(1);
+        recipe.setId(testID);
         recipe.setName("Spaghetti");
 
-        Mockito.when(recipeService.viewRecipe(1)).thenReturn(recipe);
+        Mockito.when(recipeService.viewRecipe(testID)).thenReturn(recipe);
 
         mockMvc.perform(get("/recipes/1"))
                 .andExpect(status().isOk())
@@ -41,8 +42,10 @@ public class RecipeControllerTest {
 
     @Test
     void testSearchRecipes() throws Exception {
-        RecipeDTO recipe1 = new RecipeDTO(1, "Spaghetti");
-        RecipeDTO recipe2 = new RecipeDTO(2, "Spaghetti Bolognese");
+        long testID = 1L;
+        long testID2 = 2L;
+        RecipeDTO recipe1 = new RecipeDTO(testID, "Spaghetti");
+        RecipeDTO recipe2 = new RecipeDTO(testID2, "Spaghetti Bolognese");
         List<RecipeDTO> recipes = Arrays.asList(recipe1, recipe2);
 
         Mockito.when(recipeService.searchRecipes("spaghetti")).thenReturn(recipes);

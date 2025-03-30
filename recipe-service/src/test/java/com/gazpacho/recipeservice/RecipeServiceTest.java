@@ -27,33 +27,37 @@ public class RecipeServiceTest {
 
     @Test
     void testViewRecipe_Found() {
+        long testID = 1L;
         RecipeEntity recipe = new RecipeEntity();
-        recipe.setId(1);
+        recipe.setId(testID);
         recipe.setName("Spaghetti");
 
-        when(recipeRepository.findById(1)).thenReturn(Optional.of(recipe));
+        when(recipeRepository.findById(testID)).thenReturn(Optional.of(recipe));
 
-        RecipeEntity result = recipeService.viewRecipe(1);
+        RecipeEntity result = recipeService.viewRecipe(testID);
         assertEquals("Spaghetti", result.getName());
     }
 
     @Test
     void testViewRecipe_NotFound() {
-        when(recipeRepository.findById(1)).thenReturn(Optional.empty());
+        long testID = 1L;
+        when(recipeRepository.findById(testID)).thenReturn(Optional.empty());
         Exception ex = assertThrows(RuntimeException.class, () -> {
-            recipeService.viewRecipe(1);
+            recipeService.viewRecipe(testID);
         });
         assertEquals("Recipe not found", ex.getMessage());
     }
 
     @Test
     void testSearchRecipes() {
+        long testID = 1L;
         RecipeEntity recipe1 = new RecipeEntity();
-        recipe1.setId(1);
+        recipe1.setId(testID);
         recipe1.setName("Spaghetti");
 
+        long testID2 = 2L;
         RecipeEntity recipe2 = new RecipeEntity();
-        recipe2.setId(2);
+        recipe2.setId(testID2);
         recipe2.setName("Pizza");
 
         when(recipeRepository.findAll()).thenReturn(Arrays.asList(recipe1, recipe2));
