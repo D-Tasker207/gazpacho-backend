@@ -1,3 +1,4 @@
+---
 server:
   port: 8081
 
@@ -7,7 +8,7 @@ spring:
 
   profiles:
     include: dotenv
-  
+
   datasource:
     url: jdbc:mysql://localhost:3306/userdb?useSSL=false&serverTimezone=UTC
     username: ${USERDB_USERNAME}
