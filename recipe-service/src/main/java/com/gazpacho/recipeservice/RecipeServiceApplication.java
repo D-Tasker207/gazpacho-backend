@@ -1,5 +1,11 @@
 package com.gazpacho.recipeservice;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class RecipeServiceApplication {
-    //Spring boot entry point
+    public static void main(String[] args) {
+        SpringApplication.run(RecipeServiceApplication.class, args);
+    }
 }
