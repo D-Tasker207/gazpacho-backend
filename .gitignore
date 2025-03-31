@@ -38,6 +38,7 @@ Thumbs.db
 
 # Environment-specific files
 .env
+.factorypath
 
 # Build artifacts
 *.war
