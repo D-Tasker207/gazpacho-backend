@@ -5,15 +5,14 @@ import static org.mockito.Mockito.*;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
-import com.gazpacho.userservice.security.JWTTokenGenerator;
-import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
+import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.service.UserService;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import java.util.Optional;
 
 class UserServiceTest {
 
@@ -24,8 +23,8 @@ class UserServiceTest {
   @BeforeEach
   void setUp() {
     userRepository = mock(UserRepository.class);
-    tokenGenerator = mock(JWTTokenGenerator.class);
-    userService = new UserService(userRepository);
+    tokenGenerator = mock(TokenGenerator.class);
+    userService = new UserService(userRepository, tokenGenerator);
   }
 
   @Test
@@ -33,7 +32,11 @@ class UserServiceTest {
     LoginDTO dto = new LoginDTO("test@example.com", "password123");
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);
     when(userRepository.save(any(UserEntity.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+        .thenAnswer(inv -> {
+          UserEntity user = inv.getArgument(0);
+          user.setId(1L); // Simulate auto-generated ID
+          return user;
+        });
 
     userService.registerUser(dto);
 
@@ -41,6 +44,8 @@ class UserServiceTest {
     verify(userRepository).save(userCaptor.capture());
 
     UserEntity savedUser = userCaptor.getValue();
+
+    assertEquals(1L, savedUser.getId());
     assertEquals("test@example.com", savedUser.getEmail());
     assertEquals("password123", savedUser.getPassword());
   }
@@ -63,17 +68,28 @@ class UserServiceTest {
     LoginDTO dto = new LoginDTO("test@example.com", "password123");
 
     UserEntity user = new UserEntity();
+    user.setId(1L);
     user.setEmail(dto.getEmail());
     user.setPassword("password123");
 
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
-    when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
-    when(tokenGenerator.generateToken(user)).thenReturn("jwt-token-abc123");
+    when(userRepository.findByEmail(dto.getEmail()))
+        .thenReturn(Optional.of(user));
+    when(tokenGenerator.generateToken(any(UserEntity.class)))
+        .thenReturn("jwt-token-abc123");
+    when(tokenGenerator.getExpirationTimeMillis()).thenReturn(0L);
 
     Optional<TokenResponseDTO> result = userService.loginUser(dto);
 
     assertTrue(result.isPresent());
-    assertEquals("jwt-token-abc123", result.get());
+    TokenResponseDTO tokenResponse = result.get();
+    System.out.println("Token: " + tokenResponse.getToken());
+    assertNotNull(tokenResponse.getToken());
+    assertEquals(1L, tokenResponse.getUserId());
+    assertEquals("jwt-token-abc123", tokenResponse.getToken());
+    assertEquals("Bearer", tokenResponse.getTokenType());
+    assertEquals(tokenGenerator.getExpirationTimeMillis(),
+        tokenResponse.getExpiresIn());
   }
 
   @Test
@@ -85,7 +101,8 @@ class UserServiceTest {
     user.setPassword("password123");
 
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
-    when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
+    when(userRepository.findByEmail(dto.getEmail()))
+        .thenReturn(Optional.of(user));
 
     Optional<TokenResponseDTO> result = userService.loginUser(dto);
 
@@ -98,7 +115,8 @@ class UserServiceTest {
     LoginDTO dto = new LoginDTO("nonexistent@example.com", "password123");
 
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);
-    when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(dto.getEmail()))
+        .thenReturn(Optional.empty());
 
     Optional<TokenResponseDTO> result = userService.loginUser(dto);
 

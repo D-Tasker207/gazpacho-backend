@@ -47,6 +47,10 @@ public class UserController {
 
   @PostMapping("/login")
   public ResponseEntity<TokenResponseDTO> loginUser(@Valid @RequestBody LoginDTO dto) {
-    return null;
+    Optional<TokenResponseDTO> token = userService.loginUser(dto);
+
+    return token
+        .map(t -> ResponseEntity.ok(t))
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
   }
 }
