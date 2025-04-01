@@ -43,11 +43,13 @@ public class UserService {
         userDto.getPassword())) // TODO: Add password hashing
       return Optional.empty();
 
-    String token = tokenGenerator.generateToken(user);
+    String acessToken = tokenGenerator.generateAccessToken(user);
+    String refreshToken = tokenGenerator.generateRefreshToken(user);
 
-    return Optional.of(new TokenResponseDTO(
-        user.getId(), token, "Bearer",
-        tokenGenerator.getExpirationTimeMillis())); // return JWT
+    return Optional.of(TokenResponseDTO.builder()
+        .accessToken(acessToken)
+        .refreshToken(refreshToken)
+        .build()); // return JWT
   }
 
   public Optional<PublicUserDTO> getUserByEmail(String email) {

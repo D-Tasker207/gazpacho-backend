@@ -51,7 +51,11 @@ class UserControllerTest {
     @Test
     void testLoginUser() throws Exception {
         when(userService.loginUser(any(LoginDTO.class)))
-                .thenReturn(Optional.of(new TokenResponseDTO(0, "jtw-token-abc123", "Bearer", 3600)));
+                .thenReturn(Optional
+                        .of(TokenResponseDTO.builder()
+                                .accessToken("jtw-access-token-abc123")
+                                .refreshToken("jtw-refresh-token-abc123")
+                                .build()));
 
         mockMvc
                 .perform(post("/users/login")

@@ -75,21 +75,18 @@ class UserServiceTest {
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
     when(userRepository.findByEmail(dto.getEmail()))
         .thenReturn(Optional.of(user));
-    when(tokenGenerator.generateToken(any(UserEntity.class)))
+    when(tokenGenerator.generateAccessToken(any(UserEntity.class)))
         .thenReturn("jwt-token-abc123");
-    when(tokenGenerator.getExpirationTimeMillis()).thenReturn(0L);
+    when(tokenGenerator.getAccessExpTimeMillis()).thenReturn(0L);
 
     Optional<TokenResponseDTO> result = userService.loginUser(dto);
 
     assertTrue(result.isPresent());
     TokenResponseDTO tokenResponse = result.get();
-    System.out.println("Token: " + tokenResponse.getToken());
-    assertNotNull(tokenResponse.getToken());
-    assertEquals(1L, tokenResponse.getUserId());
-    assertEquals("jwt-token-abc123", tokenResponse.getToken());
+    System.out.println("Token: " + tokenResponse.getAccessToken());
+    assertNotNull(tokenResponse.getAccessToken());
+    assertEquals("jwt-token-abc123", tokenResponse.getAccessToken());
     assertEquals("Bearer", tokenResponse.getTokenType());
-    assertEquals(tokenGenerator.getExpirationTimeMillis(),
-        tokenResponse.getExpiresIn());
   }
 
   @Test
