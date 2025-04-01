@@ -18,7 +18,7 @@ public class AllergenEntity {
     @Column(unique = true)
     private String name;
 
-    //One to many relationship to IngredientAllergen join entity, commented out until I add the join entity
-    //@OneToMany(mappedBy = "allergen", cascade = CascadeType.ALL, orphanRemoval = true)
-    //private Set<IngredientAllergen> ingredientAllergens = new HashSet<>();
+    //One to many relationship to IngredientAllergen join entity
+    @OneToMany(mappedBy = "allergen", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<IngredientAllergenEntity> ingredientAllergens = new HashSet<>();
 }
