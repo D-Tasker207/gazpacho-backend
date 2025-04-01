@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Optional;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
+import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.controller.UserController;
 import com.gazpacho.userservice.service.UserService;
@@ -98,6 +99,42 @@ class UserControllerTest {
                         .contentType("application/json")
                         .content("{\"email\":\"notAnEmail\", " +
                                 "\"password\": \"short\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testRefresh_ValidToken200() throws Exception {
+        when(userService.refreshToken(any(RefreshRequestDTO.class)))
+                .thenReturn(Optional.of(TokenResponseDTO.builder()
+                        .accessToken("jtw-access-token-abc123")
+                        .refreshToken("jtw-refresh-token-abc123")
+                        .build()));
+
+        mockMvc
+                .perform(post("/users/refresh")
+                        .contentType("application/json")
+                        .content("{\"refreshToken\":\"valid-refresh-token\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testRefresh_InvalidToken403() throws Exception {
+        when(userService.refreshToken(any(RefreshRequestDTO.class)))
+                .thenReturn(Optional.empty());
+
+        mockMvc
+                .perform(post("/users/refresh")
+                        .contentType("application/json")
+                        .content("{\"refreshToken\":\"invalid-refresh-token\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testRefresh_InvalidRequestFormat400() throws Exception {
+        mockMvc
+                .perform(post("/users/refresh")
+                        .contentType("application/json")
+                        .content("{\"invalidField\":\"invalid-refresh-token\"}"))
                 .andExpect(status().isBadRequest());
     }
 }

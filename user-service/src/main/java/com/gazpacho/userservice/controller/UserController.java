@@ -3,6 +3,7 @@ package com.gazpacho.userservice.controller;
 import com.gazpacho.sharedlib.dto.LoginDTO;
 import com.gazpacho.sharedlib.dto.PublicUserDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
+import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -48,6 +49,15 @@ public class UserController {
   @PostMapping("/login")
   public ResponseEntity<TokenResponseDTO> loginUser(@Valid @RequestBody LoginDTO dto) {
     Optional<TokenResponseDTO> token = userService.loginUser(dto);
+
+    return token
+        .map(t -> ResponseEntity.ok(t))
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
+  }
+
+  @PostMapping("/refresh")
+  public ResponseEntity<TokenResponseDTO> loginUser(@Valid @RequestBody RefreshRequestDTO dto) {
+    Optional<TokenResponseDTO> token = userService.refreshToken(dto);
 
     return token
         .map(t -> ResponseEntity.ok(t))

@@ -10,7 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TokenValidatorTest {
+class TokenValidatorTest {
 
     private TokenGenerator tokenGenerator;
     private TokenValidator tokenValidator;
@@ -21,7 +21,7 @@ public class TokenValidatorTest {
     private UserEntity user;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         tokenGenerator = new TokenGenerator();
         tokenValidator = new TokenValidator();
 
@@ -42,7 +42,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testValidAccessToken() {
+    void testValidAccessToken() {
         String token = tokenGenerator.generateAccessToken(user);
 
         assertTrue(tokenValidator.validateAccessToken(token));
@@ -50,7 +50,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testInvalidAccessToken() {
+    void testInvalidAccessToken() {
         String invalidToken = "not.a.valid.token";
 
         assertFalse(tokenValidator.validateAccessToken(invalidToken));
@@ -58,7 +58,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testExpiredAccessToken() throws InterruptedException {
+    void testExpiredAccessToken() throws InterruptedException {
         // Short-lived token generator
         TokenGenerator shortTokenGenerator = new TokenGenerator();
         ReflectionTestUtils.setField(shortTokenGenerator, "accessSecret", testAccessSecret);
@@ -75,7 +75,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testTamperedAccessToken() {
+    void testTamperedAccessToken() {
         String token = tokenGenerator.generateAccessToken(user);
         String tampered = token.substring(0, token.length() - 1) + "X";
 
@@ -84,7 +84,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testAccessTokenWithWrongSecret() {
+    void testAccessTokenWithWrongSecret() {
         TokenValidator otherValidator = new TokenValidator();
         ReflectionTestUtils.setField(otherValidator, "accessSecret", "thisisadifferentsecretkey1234567");
         ReflectionTestUtils.setField(otherValidator, "refreshSecret", testRefreshSecret);
@@ -96,7 +96,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testJustExpiredAccessToken() throws InterruptedException {
+    void testJustExpiredAccessToken() throws InterruptedException {
         // Short-lived token generator
         TokenGenerator otherGenerator = new TokenGenerator();
         ReflectionTestUtils.setField(otherGenerator, "accessSecret", testAccessSecret);
@@ -110,10 +110,8 @@ public class TokenValidatorTest {
         assertNull(tokenValidator.getUserIdFromAccessToken(token));
     }
 
-    // ==== REFRESH TOKEN TESTS ====
-
     @Test
-    public void testValidRefreshToken() {
+    void testValidRefreshToken() {
         String refreshToken = tokenGenerator.generateRefreshToken(user);
 
         assertTrue(tokenValidator.validateRefreshToken(refreshToken));
@@ -121,7 +119,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testInvalidRefreshToken() {
+    void testInvalidRefreshToken() {
         String invalidToken = "not.a.valid.token";
 
         assertFalse(tokenValidator.validateRefreshToken(invalidToken));
@@ -129,7 +127,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testTamperedRefreshToken() {
+    void testTamperedRefreshToken() {
         String token = tokenGenerator.generateRefreshToken(user);
         String tampered = token.substring(0, token.length() - 1) + "X";
 
@@ -138,7 +136,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testRefreshTokenWithWrongSecret() {
+    void testRefreshTokenWithWrongSecret() {
         TokenValidator otherValidator = new TokenValidator();
         ReflectionTestUtils.setField(otherValidator, "refreshSecret", "differentrefreshsecretkey1234567");
         ReflectionTestUtils.setField(otherValidator, "accessSecret", testAccessSecret);
@@ -150,7 +148,7 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testExpiredRefreshToken() throws InterruptedException {
+    void testExpiredRefreshToken() throws InterruptedException {
         TokenGenerator shortTokenGenerator = new TokenGenerator();
         ReflectionTestUtils.setField(shortTokenGenerator, "accessSecret", testAccessSecret);
         ReflectionTestUtils.setField(shortTokenGenerator, "refreshSecret", testRefreshSecret);
@@ -165,14 +163,14 @@ public class TokenValidatorTest {
     }
 
     @Test
-    public void testRefreshTokenWithAccessKey() {
+    void testRefreshTokenWithAccessKey() {
         String token = tokenGenerator.generateAccessToken(user);
         assertFalse(tokenValidator.validateRefreshToken(token));
         assertNull(tokenValidator.getUserIdFromRefreshToken(token));
     }
 
     @Test
-    public void testAccessTokenWithRefreshKey() {
+    void testAccessTokenWithRefreshKey() {
         String token = tokenGenerator.generateRefreshToken(user);
         assertFalse(tokenValidator.validateAccessToken(token));
         assertNull(tokenValidator.getUserIdFromAccessToken(token));
