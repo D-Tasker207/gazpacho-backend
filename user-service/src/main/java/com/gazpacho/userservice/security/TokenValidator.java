@@ -1,5 +1,6 @@
 package com.gazpacho.userservice.security;
 
+import com.gazpacho.userservice.security.TokenUtils.TokenType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.security.Key;
@@ -9,42 +10,50 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Component
 public class TokenValidator {
-    @Value("${JWT_SECRET}")
-    private String secretKey;
-    private Key key;
+    @Value("${JWT_ACCESS_SECRET}")
+    private String accessSecret;
+    private Key accessKey;
+
+    @Value("${JWT_REFRESH_SECRET}")
+    private String refreshSecret;
+    private Key refreshKey;
 
     @PostConstruct
     public void init() {
-        this.key = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secretKey.getBytes());
+        this.accessKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(accessSecret.getBytes());
+        this.refreshKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(refreshSecret.getBytes());
     }
 
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            // Token is invalid or expired
-            return false;
-        }
+    public boolean validateAccessToken(String token) {
+        return validateToken(token, TokenType.ACCESS);
     }
 
-    public Long getUserId(String token) {
-        Claims claims = getClaims(token);
+    public boolean validateRefreshToken(String token) {
+        return validateToken(token, TokenType.REFRESH);
+    }
+
+    public Long getUserIdFromAccessToken(String token) {
+        return getUserId(token, TokenType.ACCESS);
+    }
+
+    public Long getUserIdFromRefreshToken(String token) {
+        return getUserId(token, TokenType.REFRESH);
+    }
+
+    private boolean validateToken(String token, TokenType type) {
+        Claims claims = getClaims(token, type);
+        return claims != null && type.name().equalsIgnoreCase(claims.get("type", String.class));
+    }
+
+    private Long getUserId(String token, TokenType type) {
+        Claims claims = getClaims(token, type);
         return claims != null ? Long.valueOf(claims.getSubject()) : null;
     }
 
-    public String getEmail(String token) {
-        Claims claims = getClaims(token);
-        return claims != null ? claims.get("email", String.class) : null;
-    }
-
-    private Claims getClaims(String token) {
+    private Claims getClaims(String token, TokenType type) {
         try {
             return Jwts.parserBuilder()
-                    .setSigningKey(key)
+                    .setSigningKey(type == TokenType.ACCESS ? accessKey : refreshKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -52,5 +61,4 @@ public class TokenValidator {
             return null;
         }
     }
-
 }
