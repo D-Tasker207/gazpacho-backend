@@ -41,13 +41,8 @@ public class TokenValidator {
     }
 
     private boolean validateToken(String token, TokenType type) {
-        try {
-            Claims claims = getClaims(token, type);
-            return claims != null && type.name().equalsIgnoreCase(claims.get("type", String.class));
-        } catch (Exception e) {
-            // Token is invalid or expired
-            return false;
-        }
+        Claims claims = getClaims(token, type);
+        return claims != null && type.name().equalsIgnoreCase(claims.get("type", String.class));
     }
 
     private Long getUserId(String token, TokenType type) {
