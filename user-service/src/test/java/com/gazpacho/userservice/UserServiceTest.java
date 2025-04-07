@@ -1,6 +1,7 @@
 package com.gazpacho.userservice;
 
 import static org.junit.jupiter.api.Assertions.*;
+<<<<<<< HEAD
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -13,6 +14,15 @@ import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import com.gazpacho.userservice.service.UserService;
 import java.util.Optional;
+=======
+import static org.mockito.Mockito.*;
+
+import com.gazpacho.sharedlib.dto.LoginDTO;
+import com.gazpacho.sharedlib.dto.PublicUserDTO;
+import com.gazpacho.userservice.model.UserEntity;
+import com.gazpacho.userservice.repository.UserRepository;
+import com.gazpacho.userservice.service.UserService;
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -21,15 +31,22 @@ class UserServiceTest {
 
   private UserRepository userRepository;
   private UserService userService;
+<<<<<<< HEAD
   private TokenGenerator tokenGenerator;
   private TokenValidator tokenValidator;
+=======
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
 
   @BeforeEach
   void setUp() {
     userRepository = mock(UserRepository.class);
+<<<<<<< HEAD
     tokenGenerator = mock(TokenGenerator.class);
     tokenValidator = mock(TokenValidator.class);
     userService = new UserService(userRepository, tokenGenerator, tokenValidator);
+=======
+    userService = new UserService(userRepository);
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
   }
 
   @Test
@@ -37,6 +54,7 @@ class UserServiceTest {
     LoginDTO dto = new LoginDTO("test@example.com", "password123");
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);
     when(userRepository.save(any(UserEntity.class)))
+<<<<<<< HEAD
         .thenAnswer(inv -> {
           UserEntity user = inv.getArgument(0);
           user.setId(1L); // Simulate auto-generated ID
@@ -44,13 +62,21 @@ class UserServiceTest {
         });
 
     userService.registerUser(dto);
+=======
+        .thenAnswer(inv -> inv.getArgument(0));
+
+    PublicUserDTO result = userService.registerUser(dto);
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
 
     ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository).save(userCaptor.capture());
 
     UserEntity savedUser = userCaptor.getValue();
+<<<<<<< HEAD
 
     assertEquals(1L, savedUser.getId());
+=======
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
     assertEquals("test@example.com", savedUser.getEmail());
     assertEquals("password123", savedUser.getPassword());
   }
@@ -59,6 +85,10 @@ class UserServiceTest {
   void registerUser_NonUniqueEmail() {
     LoginDTO dto = new LoginDTO("existingEmail@example.com", "password123");
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
     Exception ex = assertThrows(IllegalArgumentException.class,
         () -> {
           userService.registerUser(dto);
@@ -67,6 +97,7 @@ class UserServiceTest {
     assertEquals("Email is already in use", ex.getMessage());
     verify(userRepository, never()).save(any(UserEntity.class));
   }
+<<<<<<< HEAD
 
   @Test
   void loginUser_ValidCredentials() {
@@ -192,4 +223,6 @@ class UserServiceTest {
     verify(tokenGenerator).generateAccessToken(user);
     verify(tokenGenerator).generateRefreshToken(user);
   }
+=======
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
 }

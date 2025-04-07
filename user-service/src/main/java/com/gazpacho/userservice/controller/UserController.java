@@ -2,6 +2,7 @@ package com.gazpacho.userservice.controller;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
 import com.gazpacho.sharedlib.dto.PublicUserDTO;
+<<<<<<< HEAD
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.userservice.service.UserService;
@@ -13,6 +14,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.Optional;
+=======
+import com.gazpacho.userservice.service.UserService;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
 
 @RestController
 @RequestMapping("/users")
@@ -45,6 +57,7 @@ public class UserController {
     PublicUserDTO newUser = userService.registerUser(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
   }
+<<<<<<< HEAD
 
   @PostMapping("/login")
   public ResponseEntity<TokenResponseDTO> loginUser(@Valid @RequestBody LoginDTO dto) {
@@ -63,4 +76,6 @@ public class UserController {
         .map(t -> ResponseEntity.ok(t))
         .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
   }
+=======
+>>>>>>> 882638b38577b6d64d7af4d05aec0eac50b37214
 }
