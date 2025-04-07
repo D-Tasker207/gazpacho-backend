@@ -32,13 +32,15 @@ public class RecipeControllerTest {
         RecipeEntity recipe = new RecipeEntity();
         recipe.setId(testID);
         recipe.setName("Spaghetti");
-
+    
         Mockito.when(recipeService.viewRecipe(testID)).thenReturn(recipe);
-
+    
         mockMvc.perform(get("/recipes/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Spaghetti"));
+                .andExpect(jsonPath("$.name").value("Spaghetti"))
+                .andExpect(jsonPath("$.id").value(testID));
     }
+    
 
     @Test
     void testSearchRecipes() throws Exception {

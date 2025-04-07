@@ -18,10 +18,13 @@ public class RecipeController {
         this.recipeService = recipeService;
     }
 
+    // Updated endpoint to return a RecipeDTO instead of a RecipeEntity.
     @GetMapping("/{id}")
-    public ResponseEntity<RecipeEntity> viewRecipe(@PathVariable("id") Long recipeId) {
+    public ResponseEntity<RecipeDTO> viewRecipe(@PathVariable("id") Long recipeId) {
         RecipeEntity recipe = recipeService.viewRecipe(recipeId);
-        return ResponseEntity.ok(recipe);
+        // Convert RecipeEntity to RecipeDTO.
+        RecipeDTO dto = new RecipeDTO(recipe.getId(), recipe.getName());
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/search")
