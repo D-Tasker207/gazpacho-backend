@@ -37,6 +37,18 @@ public class RecipeController {
         }
     }
 
+    //DELETE endpoint for deleting a recipe:
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteRecipe(@PathVariable("id") Long recipeId) {
+        // TODO: Add admin access validation here if we want
+        try {
+            recipeService.deleteRecipe(recipeId);
+            return ResponseEntity.ok("Recipe deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<RecipeDTO>> searchRecipes(@RequestParam("q") String query) {
         List<RecipeDTO> recipes = recipeService.searchRecipes(query);

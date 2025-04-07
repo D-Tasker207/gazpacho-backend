@@ -15,6 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -57,5 +60,39 @@ public class RecipeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Spaghetti"))
                 .andExpect(jsonPath("$[1].name").value("Spaghetti Bolognese"));
+    }
+
+    //Recipe Delete Tests:
+    @Test
+    void testDeleteRecipe_Success() throws Exception {
+        long testID = 1L;
+        // Simulate successful deletion
+        doNothing().when(recipeService).deleteRecipe(testID);
+
+        mockMvc.perform(delete("/recipes/" + testID))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Recipe deleted successfully"));
+    }
+
+    @Test
+    void testDeleteRecipe_NotFound() throws Exception {
+        long testID = 1L;
+        //Simulate not found
+        doThrow(new RuntimeException("Recipe not found")).when(recipeService).deleteRecipe(testID);
+
+        mockMvc.perform(delete("/recipes/" + testID))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Recipe not found"));
+    }
+
+    @Test
+    void testDeleteRecipe_UnexpectedException() throws Exception {
+        long testID = 2L;
+        //boundary case: Try throwing an unexpected exception instead of a not found exception
+        doThrow(new RuntimeException("Unexpected error")).when(recipeService).deleteRecipe(testID);
+
+        mockMvc.perform(delete("/recipes/" + testID))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Unexpected error"));
     }
 }
