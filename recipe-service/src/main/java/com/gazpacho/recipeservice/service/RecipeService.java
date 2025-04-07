@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class RecipeService {
@@ -17,9 +18,8 @@ public class RecipeService {
         this.recipeRepository = recipeRepository;
     }
 
-    public RecipeEntity viewRecipe(Long recipeId) {
-        return recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("Recipe not found"));
+    public Optional<RecipeEntity> viewRecipe(Long recipeId) {
+        return recipeRepository.findById(recipeId);
     }
 
     public List<RecipeDTO> searchRecipes(String query) {
