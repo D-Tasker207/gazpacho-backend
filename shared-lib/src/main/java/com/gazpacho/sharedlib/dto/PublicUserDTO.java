@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PublicUserDTO {
-
-    private String email;
-    private List<Long> savedRecipeIds;
+  private Long id;
+  private String email;
+  private List<Long> savedRecipeIds;
 }
