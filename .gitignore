@@ -38,6 +38,7 @@ Thumbs.db
 
 # Environment-specific files
 .env
+.factorypath
 
 # Build artifacts
 *.war
@@ -51,6 +52,3 @@ Thumbs.db
 
 # Spring Boot devtools file
 .spring-boot-devtools.properties
-
-# Factory files
-*.factorypath
