@@ -19,7 +19,7 @@ public class RecipeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column
     private String name;
 
     //Many to many ingredient-recipe relationship
@@ -36,4 +36,6 @@ public class RecipeEntity {
     @CollectionTable(name = "recipe_steps", joinColumns = @JoinColumn(name = "recipe_id"))
     @Column(name = "step")
     private List<String> steps = new ArrayList<>();
+
+    //TODO: Join to user entity to allow for users to save recipes.
 }
