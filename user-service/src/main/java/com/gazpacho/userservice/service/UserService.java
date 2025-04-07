@@ -75,10 +75,6 @@ public class UserService {
         .build());
   }
 
-  public Optional<PublicUserDTO> getUserByEmail(String email) {
-    return null;
-  }
-
   public Optional<PublicUserDTO> getUserById(Long id) {
     return null;
   }
