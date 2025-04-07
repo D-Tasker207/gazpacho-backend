@@ -12,6 +12,6 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RefreshRequestDTO {
-    @NotEmpty(message = "Refresh token cannot be empty")
-    private String refreshToken;
+  @NotEmpty(message = "Refresh token cannot be empty")
+  private String refreshToken;
 }

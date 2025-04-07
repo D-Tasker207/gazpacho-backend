@@ -10,7 +10,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RecipeRepository extends JpaRepository<RecipeEntity, Long> {
-    Optional<RecipeEntity> findByName(String name);
-    List<RecipeEntity> findByNameContainingIgnoreCase(String query);
-    //findByID auto included in JPA
+  Optional<RecipeEntity> findByName(String name);
+
+  List<RecipeEntity> findByNameContainingIgnoreCase(String query);
+  // findByID auto included in JPA
 }

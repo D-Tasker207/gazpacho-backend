@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class RecipeDTO {
     private Long id;
     private String name;
-    //TODO: Finalize DTO with more fields
+    // TODO: Finalize DTO with more fields
 }
