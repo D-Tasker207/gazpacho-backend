@@ -34,18 +34,18 @@ public class RecipeServiceTest {
 
         when(recipeRepository.findById(testID)).thenReturn(Optional.of(recipe));
 
-        RecipeEntity result = recipeService.viewRecipe(testID);
-        assertEquals("Spaghetti", result.getName());
+        Optional<RecipeEntity> result = recipeService.viewRecipe(testID);
+        assertTrue(result.isPresent());
+        assertEquals("Spaghetti", result.get().getName());
     }
 
     @Test
     void testViewRecipe_NotFound() {
         long testID = 1L;
         when(recipeRepository.findById(testID)).thenReturn(Optional.empty());
-        Exception ex = assertThrows(RuntimeException.class, () -> {
-            recipeService.viewRecipe(testID);
-        });
-        assertEquals("Recipe not found", ex.getMessage());
+        
+        Optional<RecipeEntity> result = recipeService.viewRecipe(testID);
+        assertFalse(result.isPresent());
     }
 
     @Test

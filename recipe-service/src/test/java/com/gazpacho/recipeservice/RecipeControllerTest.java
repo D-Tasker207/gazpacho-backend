@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,15 +34,15 @@ public class RecipeControllerTest {
         recipe.setId(testID);
         recipe.setName("Spaghetti");
     
-        Mockito.when(recipeService.viewRecipe(testID)).thenReturn(recipe);
+        // Return Optional.of(recipe)
+        Mockito.when(recipeService.viewRecipe(testID)).thenReturn(Optional.of(recipe));
     
         mockMvc.perform(get("/recipes/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Spaghetti"))
-                .andExpect(jsonPath("$.id").value(testID));
+                .andExpect(jsonPath("$.id").value((int)testID));
     }
     
-
     @Test
     void testSearchRecipes() throws Exception {
         long testID = 1L;
