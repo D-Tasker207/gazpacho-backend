@@ -45,8 +45,6 @@ public class RecipeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Spaghetti"))
                 .andExpect(jsonPath("$.id").value((int)testID));
-                .andExpect(jsonPath("$.name").value("Spaghetti"))
-                .andExpect(jsonPath("$.id").value((int)testID));
     }
     
     @Test
