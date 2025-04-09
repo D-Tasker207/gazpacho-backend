@@ -37,6 +37,9 @@ public class RecipeServiceTest {
         Optional<RecipeEntity> result = recipeService.viewRecipe(testID);
         assertTrue(result.isPresent());
         assertEquals("Spaghetti", result.get().getName());
+        Optional<RecipeEntity> result = recipeService.viewRecipe(testID);
+        assertTrue(result.isPresent());
+        assertEquals("Spaghetti", result.get().getName());
     }
 
     @Test

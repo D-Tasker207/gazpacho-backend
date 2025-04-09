@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class RecipeService {
@@ -18,10 +19,17 @@ public class RecipeService {
     this.recipeRepository = recipeRepository;
   }
 
-  // Now returns Optional<RecipeEntity>.
-  public Optional<RecipeEntity> viewRecipe(Long recipeId) {
-    return recipeRepository.findById(recipeId);
-  }
+    public Optional<RecipeEntity> viewRecipe(Long recipeId) {
+        return recipeRepository.findById(recipeId);
+    }
+
+    public void deleteRecipe(Long recipeId) {
+        if (recipeRepository.existsById(recipeId)) {
+            recipeRepository.deleteById(recipeId);
+        } else {
+            throw new RuntimeException("Recipe not found");
+        }
+    }
 
   public List<RecipeDTO> searchRecipes(String query) {
     return recipeRepository.findAll().stream()

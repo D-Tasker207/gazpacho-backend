@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/recipes")
@@ -20,19 +21,33 @@ public class RecipeController {
     this.recipeService = recipeService;
   }
 
-  @GetMapping("/{id}")
-  public ResponseEntity<?> viewRecipe(@PathVariable("id") Long recipeId) {
-    // Unwrapping the optional
-    Optional<RecipeEntity> maybeRecipe = recipeService.viewRecipe(recipeId);
-    if (maybeRecipe.isPresent()) {
-      RecipeEntity recipe = maybeRecipe.get();
-      RecipeDTO dto = new RecipeDTO(recipe.getId(), recipe.getName());
-      return ResponseEntity.ok(dto);
-    } else {
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body("Recipe with id " + recipeId + " not found");
+    @GetMapping("/{id}")
+    public ResponseEntity<?> viewRecipe(@PathVariable("id") Long recipeId) {
+        //unwrapping optional 
+        Optional<RecipeEntity> maybeRecipe = recipeService.viewRecipe(recipeId);
+        if (maybeRecipe.isPresent()) {
+            RecipeEntity recipe = maybeRecipe.get();
+            //convert RecipeEntity to RecipeDTO.
+            RecipeDTO dto = new RecipeDTO(recipe.getId(), recipe.getName());
+            return ResponseEntity.ok(dto);
+        } else {
+            //Return 404 Not Found with an error message.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Recipe with id " + recipeId + " not found");
+        }
     }
-  }
+
+    //DELETE endpoint for deleting a recipe:
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteRecipe(@PathVariable("id") Long recipeId) {
+        // TODO: Add admin access validation here if we want
+        try {
+            recipeService.deleteRecipe(recipeId);
+            return ResponseEntity.ok("Recipe deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
 
   @GetMapping("/search")
   public ResponseEntity<List<RecipeDTO>> searchRecipes(@RequestParam("q") String query) {
