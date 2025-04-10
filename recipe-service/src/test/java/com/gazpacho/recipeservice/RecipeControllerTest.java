@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Optional;
 
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -36,16 +37,16 @@ public class RecipeControllerTest {
         RecipeEntity recipe = new RecipeEntity();
         recipe.setId(testID);
         recipe.setName("Spaghetti");
-
-        // Return an Optional.of(recipe)
+    
+        // Return Optional.of(recipe)
         Mockito.when(recipeService.viewRecipe(testID)).thenReturn(Optional.of(recipe));
-
+    
         mockMvc.perform(get("/recipes/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Spaghetti"))
                 .andExpect(jsonPath("$.id").value((int)testID));
     }
-
+    
     @Test
     void testSearchRecipes() throws Exception {
         long testID = 1L;

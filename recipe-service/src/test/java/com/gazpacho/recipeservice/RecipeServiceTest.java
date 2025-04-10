@@ -43,7 +43,7 @@ public class RecipeServiceTest {
     void testViewRecipe_NotFound() {
         long testID = 1L;
         when(recipeRepository.findById(testID)).thenReturn(Optional.empty());
-
+        
         Optional<RecipeEntity> result = recipeService.viewRecipe(testID);
         assertFalse(result.isPresent());
     }
