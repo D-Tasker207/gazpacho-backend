@@ -48,9 +48,12 @@ public class RecipeController {
         }
     }
 
+  //segmented search: by recipe, ingredient, or allergen.(Added recipe as default)
   @GetMapping("/search")
-  public ResponseEntity<List<RecipeDTO>> searchRecipes(@RequestParam("q") String query) {
-    List<RecipeDTO> recipes = recipeService.searchRecipes(query);
+  public ResponseEntity<List<RecipeDTO>> searchRecipes(
+          @RequestParam("q") String query,
+          @RequestParam(name = "type", required = false, defaultValue = "recipe") String type) {
+    List<RecipeDTO> recipes = recipeService.searchRecipes(query, type);
     return ResponseEntity.ok(recipes);
   }
 }

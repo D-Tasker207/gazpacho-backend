@@ -30,11 +30,42 @@ public class RecipeService {
     }
   }
 
+  // Overloaded method to default to recipe search.
   public List<RecipeDTO> searchRecipes(String query) {
-    return recipeRepository.findAll().stream()
-        .filter(recipe -> recipe.getName() != null &&
-            recipe.getName().toLowerCase().contains(query.toLowerCase()))
-        .map(recipe -> new RecipeDTO(recipe.getId(), recipe.getName()))
-        .collect(Collectors.toList());
+    return searchRecipes(query, "recipe");
+  }
+
+  //segmented search-- if type is not one of expected, default to recipesearch
+  public List<RecipeDTO> searchRecipes(String query, String type) {
+    if ("recipe".equalsIgnoreCase(type)) {
+      return recipeRepository.findByNameContainingIgnoreCase(query)
+              .stream()
+              .map(recipe -> new RecipeDTO(recipe.getId(), recipe.getName()))
+              .collect(Collectors.toList());
+    } else if ("ingredient".equalsIgnoreCase(type)) {
+      return recipeRepository.findAll().stream()
+              .filter(recipe -> recipe.getIngredients().stream()
+                      .anyMatch(ingredient ->
+                              ingredient.getName() != null &&
+                              ingredient.getName().toLowerCase().contains(query.toLowerCase())))
+              .map(recipe -> new RecipeDTO(recipe.getId(), recipe.getName()))
+              .collect(Collectors.toList());
+    } else if ("allergen".equalsIgnoreCase(type)) {
+      return recipeRepository.findAll().stream()
+              .filter(recipe -> recipe.getIngredients().stream()
+                      .anyMatch(ingredient -> ingredient.getIngredientAllergens().stream()
+                              .anyMatch(join ->
+                                  join.getAllergen() != null &&
+                                  join.getAllergen().getName() != null &&
+                                  join.getAllergen().getName().toLowerCase().contains(query.toLowerCase()))))
+              .map(recipe -> new RecipeDTO(recipe.getId(), recipe.getName()))
+              .collect(Collectors.toList());
+    } else {
+      //default fallback
+      return recipeRepository.findByNameContainingIgnoreCase(query)
+              .stream()
+              .map(recipe -> new RecipeDTO(recipe.getId(), recipe.getName()))
+              .collect(Collectors.toList());
+    }
   }
 }

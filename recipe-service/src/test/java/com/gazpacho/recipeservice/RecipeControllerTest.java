@@ -37,7 +37,6 @@ public class RecipeControllerTest {
         recipe.setId(testID);
         recipe.setName("Spaghetti");
     
-        // Return Optional.of(recipe)
         Mockito.when(recipeService.viewRecipe(testID)).thenReturn(Optional.of(recipe));
     
         mockMvc.perform(get("/recipes/1"))
@@ -47,26 +46,63 @@ public class RecipeControllerTest {
     }
     
     @Test
-    void testSearchRecipes() throws Exception {
+    void testSearchRecipes_DefaultToRecipeType() throws Exception {
         long testID = 1L;
-        long testID2 = 2L;
         RecipeDTO recipe1 = new RecipeDTO(testID, "Spaghetti");
-        RecipeDTO recipe2 = new RecipeDTO(testID2, "Spaghetti Bolognese");
+        RecipeDTO recipe2 = new RecipeDTO(testID+1, "Spaghetti Bolognese");
         List<RecipeDTO> recipes = Arrays.asList(recipe1, recipe2);
 
-        Mockito.when(recipeService.searchRecipes("spaghetti")).thenReturn(recipes);
+        Mockito.when(recipeService.searchRecipes("spaghetti", "recipe")).thenReturn(recipes);
 
         mockMvc.perform(get("/recipes/search?q=spaghetti"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Spaghetti"))
                 .andExpect(jsonPath("$[1].name").value("Spaghetti Bolognese"));
     }
+    
+    @Test
+    void testSearchRecipes_ByIngredientType() throws Exception {
+        long testID = 3L;
+        RecipeDTO recipe = new RecipeDTO(testID, "Mac & Cheese");
+        Mockito.when(recipeService.searchRecipes("cheese", "ingredient"))
+                .thenReturn(Arrays.asList(recipe));
 
-    //Recipe Delete Tests:
+        mockMvc.perform(get("/recipes/search?q=cheese&type=ingredient"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Mac & Cheese"))
+                .andExpect(jsonPath("$[0].id").value((int)testID));
+    }
+    
+    @Test
+    void testSearchRecipes_ByAllergenType() throws Exception {
+        long testID = 4L;
+        RecipeDTO recipe = new RecipeDTO(testID, "Peanut Pie");
+        Mockito.when(recipeService.searchRecipes("peanut", "allergen"))
+                .thenReturn(Arrays.asList(recipe));
+
+        mockMvc.perform(get("/recipes/search?q=peanut&type=allergen"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Peanut Pie"))
+                .andExpect(jsonPath("$[0].id").value((int)testID));
+    }
+    
+    @Test
+    void testSearchRecipes_UnknownTypeFallsBack() throws Exception {
+        long testID = 5L;
+        RecipeDTO recipe = new RecipeDTO(testID, "Chicken Alfredo");
+        Mockito.when(recipeService.searchRecipes("alfredo", "unknown"))
+                .thenReturn(Arrays.asList(recipe));
+
+        mockMvc.perform(get("/recipes/search?q=alfredo&type=unknown"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Chicken Alfredo"))
+                .andExpect(jsonPath("$[0].id").value((int)testID));
+    }
+    
+    // -- Delete endpoint tests --
     @Test
     void testDeleteRecipe_Success() throws Exception {
         long testID = 1L;
-        // Simulate successful deletion
         doNothing().when(recipeService).deleteRecipe(testID);
 
         mockMvc.perform(delete("/recipes/" + testID))
@@ -77,7 +113,6 @@ public class RecipeControllerTest {
     @Test
     void testDeleteRecipe_NotFound() throws Exception {
         long testID = 1L;
-        //Simulate not found
         doThrow(new RuntimeException("Recipe not found")).when(recipeService).deleteRecipe(testID);
 
         mockMvc.perform(delete("/recipes/" + testID))
@@ -88,7 +123,6 @@ public class RecipeControllerTest {
     @Test
     void testDeleteRecipe_UnexpectedException() throws Exception {
         long testID = 2L;
-        //boundary case: Try throwing an unexpected exception instead of a not found exception
         doThrow(new RuntimeException("Unexpected error")).when(recipeService).deleteRecipe(testID);
 
         mockMvc.perform(delete("/recipes/" + testID))
