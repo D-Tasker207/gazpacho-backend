@@ -11,6 +11,10 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
   exit 1
 fi
 
+# Get absolute path of the script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit
+
 # Check if container is already running
 if [ "$(docker ps -q -f name=mysql-container)" ]; then
   echo -e "${YELLOW}[WARNING]${RESET} MySQL container is already running. Stopping it..."
@@ -82,9 +86,9 @@ echo -e "${GREEN}[SUCCESS]${RESET} MySQL container is ready."
 #Print these if script was not called by another script
 if [ "$0" = "$BASH_SOURCE" ]; then
   echo -e "${CYAN}[INFO]${RESET} To connect to the MySQL container, use the following command:"
-  echo -e "${CYAN}[INFO]${RESET} docker exec -it mysql-container mysql -u root -p"
+  echo -e "${CYAN}[INFO]${RESET} mysql -h 127.0.0.1 -P 3306 -u root -p"
   echo -e "${CYAN}[INFO]${RESET} To stop the container, run:"
-  echo -e "${CYAN}[INFO]${RESET} docker compose down"
+  echo -e "${CYAN}[INFO]${RESET} stop_container.sh"
   echo -e "${CYAN}[INFO]${RESET} To remove the container and its volumes, run:"
-  echo -e "${CYAN}[INFO]${RESET} docker compose down -v"
+  echo -e "${CYAN}[INFO]${RESET} stop_container.sh -v"
 fi

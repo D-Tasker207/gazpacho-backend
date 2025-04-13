@@ -11,6 +11,9 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
   exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit
+
 # Check if container is running
 if [ "$(docker ps -q -f name=mysql)" ]; then
   echo -e "${CYAN}[INFO]${RESET} MySQL container is found, Stopping it..."
