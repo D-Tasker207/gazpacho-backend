@@ -1,23 +1,26 @@
 package com.gazpacho.recipeservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.EqualsAndHashCode;
+import java.util.HashSet;
+import java.util.Set;
 
-//TODO: Finalize actual ingredient entity, this is a placeholder for recipe entity
 @Getter
 @Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
-@Table(name = "ingredients")
+@Table(name = "ingredients", indexes = { @Index(name = "idx_ingredient_name", columnList = "name") })
 public class IngredientEntity {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //overridden equals and hashcode here to allow for matching ingredient on ID instead of reference
+    @EqualsAndHashCode.Include
+    private Long id;
 
-  // A minimal placeholder field
-  private String name;
+    private String name;
+
+    @OneToMany(mappedBy = "ingredient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<IngredientAllergenEntity> ingredientAllergens = new HashSet<>();
 }

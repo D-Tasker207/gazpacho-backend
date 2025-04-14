@@ -3,7 +3,6 @@ package com.gazpacho.recipeservice.controller;
 import com.gazpacho.sharedlib.dto.RecipeDTO;
 import com.gazpacho.recipeservice.model.RecipeEntity;
 import com.gazpacho.recipeservice.service.RecipeService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,9 +36,24 @@ public class RecipeController {
     }
   }
 
+    //DELETE endpoint for deleting a recipe:
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteRecipe(@PathVariable("id") Long recipeId) {
+        // TODO: Add admin access validation here if we want
+        try {
+            recipeService.deleteRecipe(recipeId);
+            return ResponseEntity.ok("Recipe deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+  //segmented search: by recipe, ingredient, or allergen.(Added recipe as default)
   @GetMapping("/search")
-  public ResponseEntity<List<RecipeDTO>> searchRecipes(@RequestParam("q") String query) {
-    List<RecipeDTO> recipes = recipeService.searchRecipes(query);
+  public ResponseEntity<List<RecipeDTO>> searchRecipes(
+          @RequestParam("q") String query,
+          @RequestParam(name = "type", required = false, defaultValue = "recipe") String type) {
+    List<RecipeDTO> recipes = recipeService.searchRecipes(query, type);
     return ResponseEntity.ok(recipes);
   }
 }
