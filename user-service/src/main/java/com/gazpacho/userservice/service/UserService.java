@@ -6,6 +6,7 @@ import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
+import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,13 +20,15 @@ public class UserService {
   private final UserRepository userRepository;
   private final TokenValidator tokenValidator;
   private final TokenGenerator tokenGenerator;
+  private final RecipeRepository recipeRepository;
   private final BCryptPasswordEncoder passwordEncoder;
 
   public UserService(UserRepository userRepository,
-      TokenGenerator tokenGenerator, TokenValidator tokenValidator) {
+      TokenGenerator tokenGenerator, TokenValidator tokenValidator, RecipeRepository recipeRepository) {
     this.userRepository = userRepository;
     this.tokenGenerator = tokenGenerator;
     this.tokenValidator = tokenValidator;
+    this.recipeRepository = recipeRepository;
     this.passwordEncoder = new BCryptPasswordEncoder();
   
   }
@@ -86,7 +89,22 @@ public class UserService {
   }
 
   public void saveRecipeForUser(Long userId, Long recipeId) {
-    return;
+    Optional<UserEntity> maybeUser = userRepository.findById(userId);
+    if (maybeUser.isPresent()) {
+      //ensure recipe exists
+      if (!recipeRepository.existsById(recipeId)) {
+        throw new RuntimeException("Recipe not found");
+      }
+      UserEntity user = maybeUser.get();
+      //ensure recipe isnt already in user's saved list and add
+      if (!user.getSavedRecipeIds().contains(recipeId)) {
+        user.getSavedRecipeIds().add(recipeId);
+        userRepository.save(user);
+      }
+    } else {
+      //other case, some error occurs with the user ID
+      throw new RuntimeException("User not found");
+    }
   }
 
   public void removeSavedRecipe(Long userId, Long recipeId) {

@@ -9,6 +9,7 @@ import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
+import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import com.gazpacho.userservice.service.UserService;
@@ -26,13 +27,15 @@ class UserServiceTest {
   private TokenGenerator tokenGenerator;
   private TokenValidator tokenValidator;
   private BCryptPasswordEncoder encoder;
+private RecipeRepository recipeRepository;
 
   @BeforeEach
   void setUp() {
     userRepository = mock(UserRepository.class);
+    recipeRepository = mock(RecipeRepository.class);
     tokenGenerator = mock(TokenGenerator.class);
     tokenValidator = mock(TokenValidator.class);
-    userService = new UserService(userRepository, tokenGenerator, tokenValidator);
+    userService = new UserService(userRepository, tokenGenerator, tokenValidator, recipeRepository);
     encoder = new BCryptPasswordEncoder();
   }
 

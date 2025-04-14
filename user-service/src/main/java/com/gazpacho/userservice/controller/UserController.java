@@ -8,6 +8,7 @@ import com.gazpacho.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,5 +63,17 @@ public class UserController {
     return token
         .map(t -> ResponseEntity.ok(t))
         .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
+  }
+
+  //endpoint for saving a recipe to a user
+  @PostMapping("/{userId}/recipes/{recipeId}")
+  public ResponseEntity<?> saveRecipe(@PathVariable("userId") Long userId,
+                                      @PathVariable("recipeId") Long recipeId) {
+    try {
+      userService.saveRecipeForUser(userId, recipeId);
+      return ResponseEntity.ok("Recipe saved successfully");
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
   }
 }

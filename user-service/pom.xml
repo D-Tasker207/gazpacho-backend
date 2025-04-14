@@ -83,6 +83,11 @@
         <artifactId>spring-security-core</artifactId>
         <version>6.4.4</version>
     </dependency>
+    <dependency>
+      <groupId>com.gazpacho</groupId>
+      <artifactId>recipe-service</artifactId>
+      <version>0.0.1a</version>
+    </dependency>
   </dependencies>
 
   <build>
