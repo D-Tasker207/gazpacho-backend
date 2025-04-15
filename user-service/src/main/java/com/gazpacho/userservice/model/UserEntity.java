@@ -1,5 +1,6 @@
 package com.gazpacho.userservice.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -9,9 +10,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -27,9 +32,6 @@ public class UserEntity {
   @Column(unique = true) private String email;
   private String password;
 
-  @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(name = "user_saved_recipes",
-                   joinColumns = @JoinColumn(name = "user_id"))
-  @Column(name = "recipe_id")
-  private List<Long> savedRecipeIds = new ArrayList<>();
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<UserRecipeEntity> savedRecipes = new HashSet<>();
 }

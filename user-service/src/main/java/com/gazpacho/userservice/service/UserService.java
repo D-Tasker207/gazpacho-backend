@@ -5,7 +5,9 @@ import com.gazpacho.sharedlib.dto.PublicUserDTO;
 import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
+import com.gazpacho.userservice.model.UserRecipeEntity;
 import com.gazpacho.userservice.repository.UserRepository;
+import com.gazpacho.recipeservice.model.RecipeEntity;
 import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
@@ -14,6 +16,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,13 +44,12 @@ public class UserService {
 
     UserEntity user = new UserEntity();
     user.setEmail(newUser.getEmail());
-    //hash plain text password before saving on our end 
     String hashedPassword = passwordEncoder.encode(newUser.getPassword());
     user.setPassword(hashedPassword);
 
     UserEntity savedUser = userRepository.save(user);
-
-    return new PublicUserDTO(savedUser.getId(), savedUser.getEmail(), savedUser.getSavedRecipeIds());
+    // Adapt the DTO constructor as needed.
+    return new PublicUserDTO(savedUser.getId(), savedUser.getEmail(), null);
   }
 
   public Optional<TokenResponseDTO> loginUser(LoginDTO userDto) {
@@ -89,24 +92,29 @@ public class UserService {
     return null;
   }
 
+  // New implementation using join entity for saving a recipe.
   public void saveRecipeForUser(Long userId, Long recipeId) {
-    //look for user, add optional in case of error with user ID
     Optional<UserEntity> maybeUser = userRepository.findById(userId);
-    if (maybeUser.isPresent()) {
-      //ensure recipe exists in the recipe table before adding to user's saved list
-      if (!recipeRepository.existsById(recipeId)) {
-        throw new RuntimeException("Recipe not found");
-      }
-      UserEntity user = maybeUser.get();
-      //ensure recipe isnt already in user's saved list and add
-      if (!user.getSavedRecipeIds().contains(recipeId)) {
-        //grab id adn add to user's saved list
-        user.getSavedRecipeIds().add(recipeId);
-        userRepository.save(user);
-      }
-    } else {
-      //other case, some error occurs with the user ID
+    if (maybeUser.isEmpty()) {
       throw new RuntimeException("User not found");
+    }
+    // Check that the recipe exists.
+    Optional<RecipeEntity> maybeRecipe = recipeRepository.findById(recipeId);
+    if (maybeRecipe.isEmpty()) {
+      throw new RuntimeException("Recipe not found");
+    }
+    UserEntity user = maybeUser.get();
+    // Check if this recipe is already saved (by checking the join collection).
+    boolean alreadySaved = user.getSavedRecipes().stream()
+         .anyMatch(ur -> ur.getRecipe().getId().equals(recipeId));
+    
+    if (!alreadySaved) {
+      // Create a new join entity.
+      UserRecipeEntity userRecipe = new UserRecipeEntity();
+      userRecipe.setUser(user);
+      userRecipe.setRecipe(maybeRecipe.get());
+      user.getSavedRecipes().add(userRecipe);
+      userRepository.save(user);
     }
   }
 
@@ -115,12 +123,11 @@ public class UserService {
   }
 
   public List<Long> getSavedRecipiesById(Long userId) {
-    //Get saved recipes by ID so they can be fetched in Users' saved recipes.
-    //Temporary solution to Users saving recipes. 
-    //Currently, would need additional logic to remove recipes from Users lists that are removed from the actual recipes table
-    //TODO: Aim to implement a join table between recipes and users so we can save other metadata about saved items down the line?
+    // For the join approach, return recipe IDs from the join table.
     return userRepository.findById(userId)
-             .map(UserEntity::getSavedRecipeIds)
+             .map(user -> user.getSavedRecipes().stream()
+                               .map(ur -> ur.getRecipe().getId())
+                               .collect(Collectors.toList()))
              .orElse(Collections.emptyList());
   }
 }
