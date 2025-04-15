@@ -11,6 +11,7 @@ import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -89,15 +90,17 @@ public class UserService {
   }
 
   public void saveRecipeForUser(Long userId, Long recipeId) {
+    //look for user, add optional in case of error with user ID
     Optional<UserEntity> maybeUser = userRepository.findById(userId);
     if (maybeUser.isPresent()) {
-      //ensure recipe exists
+      //ensure recipe exists in the recipe table before adding to user's saved list
       if (!recipeRepository.existsById(recipeId)) {
         throw new RuntimeException("Recipe not found");
       }
       UserEntity user = maybeUser.get();
       //ensure recipe isnt already in user's saved list and add
       if (!user.getSavedRecipeIds().contains(recipeId)) {
+        //grab id adn add to user's saved list
         user.getSavedRecipeIds().add(recipeId);
         userRepository.save(user);
       }
@@ -112,6 +115,12 @@ public class UserService {
   }
 
   public List<Long> getSavedRecipiesById(Long userId) {
-    return null;
+    //Get saved recipes by ID so they can be fetched in Users' saved recipes.
+    //Temporary solution to Users saving recipes. 
+    //Currently, would need additional logic to remove recipes from Users lists that are removed from the actual recipes table
+    //TODO: Aim to implement a join table between recipes and users so we can save other metadata about saved items down the line?
+    return userRepository.findById(userId)
+             .map(UserEntity::getSavedRecipeIds)
+             .orElse(Collections.emptyList());
   }
 }
