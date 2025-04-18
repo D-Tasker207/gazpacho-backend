@@ -1,14 +1,12 @@
+---
 services:
   mysql:
-    image: mysql:latest
+    image: my-mysql:v1
     container_name: mysql
-    env_file:
-      - ../.env 
-    environment: 
+    environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - mysql_network
     ports:

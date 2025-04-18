@@ -4,15 +4,15 @@ server:
 
 spring:
   config:
-    import: 
+    import:
       - optional:dotenv:src/main/resources.env
-      - optional:dotenv:../.env
+      # - optional:dotenv:../.env
 
   application:
     name: user-service
-    
+
   datasource:
-    url: jdbc:mysql://localhost:3306/${USERDB_DATABASE}?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/${USERDB_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${USERDB_USERNAME}
     password: ${USERDB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
