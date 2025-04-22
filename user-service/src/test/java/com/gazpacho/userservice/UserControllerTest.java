@@ -4,9 +4,11 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
+import com.gazpacho.sharedlib.dto.PublicUserDTO;
 import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.controller.UserController;
@@ -136,5 +138,25 @@ class UserControllerTest {
             .contentType("application/json")
             .content("{\"invalidField\":\"invalid-refresh-token\"}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void testFetchUser_ValidTokenString() throws Exception {
+    String validTokenString = "Bearer valid.token.string";
+    when(userService.fetchUser(validTokenString))
+            .thenReturn(Optional.of(new PublicUserDTO(1L, "testemail@gmail.com", new ArrayList<>())));
+
+    mockMvc.perform(get("/users")
+                    .header("Authorization", validTokenString))
+            .andExpect(status().isOk());
+  }
+
+  @Test
+  void testFetchUser_InvalidTokenString() throws Exception {
+    String invalidTokenString = "Bearer invalid.token.string";
+
+    mockMvc.perform(get("/users")
+                    .header("Authorization", invalidTokenString))
+            .andExpect(status().isNotFound());
   }
 }
