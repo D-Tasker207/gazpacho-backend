@@ -154,6 +154,7 @@ class UserControllerTest {
   @Test
   void testFetchUser_InvalidTokenString() throws Exception {
     String invalidTokenString = "Bearer invalid.token.string";
+    when(userService.fetchUser(invalidTokenString)).thenReturn(Optional.empty());
 
     mockMvc.perform(get("/users")
                     .header("Authorization", invalidTokenString))
