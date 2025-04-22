@@ -1,9 +1,6 @@
 package com.gazpacho.userservice.service;
 
-import com.gazpacho.sharedlib.dto.LoginDTO;
-import com.gazpacho.sharedlib.dto.PublicUserDTO;
-import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
-import com.gazpacho.sharedlib.dto.TokenResponseDTO;
+import com.gazpacho.sharedlib.dto.*;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
@@ -75,8 +72,17 @@ public class UserService {
         .build());
   }
 
-  public Optional<PublicUserDTO> getUserById(Long id) {
-    return null;
+  public Optional<PublicUserDTO> fetchUser(String token) {
+    if (!token.startsWith("Bearer ")) return Optional.empty();
+    token = token.substring(7);
+    if (!tokenValidator.validateAccessToken(token)) return Optional.empty();
+
+    UserEntity user = userRepository
+            .findById(tokenValidator.getUserIdFromAccessToken(token))
+            .orElse(null);
+    if (user == null) return Optional.empty();
+
+    return Optional.of(new PublicUserDTO(user.getId(), user.getEmail(), user.getSavedRecipeIds()));
   }
 
   public void saveRecipeForUser(Long userId, Long recipeId) {
