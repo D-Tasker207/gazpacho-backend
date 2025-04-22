@@ -1,17 +1,13 @@
 package com.gazpacho.userservice.controller;
 
-import com.gazpacho.sharedlib.dto.LoginDTO;
-import com.gazpacho.sharedlib.dto.PublicUserDTO;
-import com.gazpacho.sharedlib.dto.TokenResponseDTO;
-import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
+import com.gazpacho.sharedlib.dto.*;
 import com.gazpacho.userservice.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.Optional;
 
 @RestController
@@ -62,5 +58,15 @@ public class UserController {
     return token
         .map(t -> ResponseEntity.ok(t))
         .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
+  }
+
+  @GetMapping("")
+  public ResponseEntity<PublicUserDTO> fetchUser(
+          @RequestHeader(name = HttpHeaders.AUTHORIZATION) String authHeader
+  ) {
+    Optional<PublicUserDTO> user = userService.fetchUser(authHeader);
+    return user
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 }
