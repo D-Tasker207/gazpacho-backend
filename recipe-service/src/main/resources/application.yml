@@ -11,7 +11,7 @@ spring:
     name: recipe-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/${RECIPEDB_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://localhost:12345/${RECIPEDB_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${RECIPEDB_USERNAME}
     password: ${RECIPEDB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver

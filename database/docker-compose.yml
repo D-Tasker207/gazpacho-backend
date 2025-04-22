@@ -10,7 +10,7 @@ services:
     networks:
       - mysql_network
     ports:
-      - "3306:3306"
+      - "12345:3306"
 
 volumes:
   mysql_data:
