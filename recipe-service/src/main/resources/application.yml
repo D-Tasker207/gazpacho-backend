@@ -8,7 +8,7 @@ spring:
       - optional:dotenv:.env
 
   application:
-    name: user-service
+    name: recipe-service
 
   datasource:
     url: jdbc:mysql://localhost:3306/${RECIPEDB_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
