@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
+import com.gazpacho.sharedlib.dto.PublicUserDTO;
 import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
@@ -205,5 +206,45 @@ private RecipeRepository recipeRepository;
     verify(userRepository).findById(userId);
     verify(tokenGenerator).generateAccessToken(user);
     verify(tokenGenerator).generateRefreshToken(user);
+  }
+
+  @Test
+  void fetchUser_ValidToken() {
+    String validAccessToken = "valid.access.token";
+    Long userId = 1L;
+    UserEntity user = new UserEntity();
+    user.setId(userId);
+    user.setEmail("testemail@gmail.com");
+    user.setPassword("password");
+    when(tokenValidator.validateAccessToken(validAccessToken)).thenReturn(true);
+    when(tokenValidator.getUserIdFromAccessToken(validAccessToken)).thenReturn(userId);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+    String authHeader = "Bearer " + validAccessToken;
+    PublicUserDTO result = userService.fetchUser(authHeader).orElseThrow();
+
+    assertEquals(1L, result.getId());
+    assertEquals("testemail@gmail.com", result.getEmail());
+  }
+
+  @Test
+  void fetchUser_InvalidToken() {
+    String invalidAccessToken = "invalid.access.token";
+    when(tokenValidator.validateAccessToken(invalidAccessToken)).thenReturn(false);
+
+    String authHeader = "Bearer " + invalidAccessToken;
+    Optional<PublicUserDTO> result = userService.fetchUser(authHeader);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void fetchUser_InvalidTokenPrefix() {
+    String validAccessToken = "valid.access.token";
+    when(tokenValidator.validateAccessToken(validAccessToken)).thenReturn(true); // to ensure this is not the cause of the error
+    String authHeader = "Bearr " + validAccessToken;
+    Optional<PublicUserDTO> result = userService.fetchUser(authHeader);
+
+    assertTrue(result.isEmpty());
   }
 }

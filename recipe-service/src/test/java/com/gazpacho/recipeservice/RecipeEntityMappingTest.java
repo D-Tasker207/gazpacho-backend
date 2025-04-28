@@ -13,8 +13,10 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-@DataJpaTest
+//Added sql init.mode = never to avoid empty db initializer errors. (Remove once actually using db. Will throw errors so long as data.sql is empty.)
+@DataJpaTest(
+    properties = "spring.sql.init.mode=never"
+)
 public class RecipeEntityMappingTest {
 
     @Autowired
