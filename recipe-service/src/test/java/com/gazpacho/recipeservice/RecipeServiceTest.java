@@ -1,7 +1,8 @@
 package com.gazpacho.recipeservice;
 
+import com.gazpacho.recipeservice.repository.AllergenRepository;
+import com.gazpacho.recipeservice.repository.IngredientRepository;
 import com.gazpacho.sharedlib.dto.RecipeDTO;
-import com.gazpacho.recipeservice.model.IngredientAllergenEntity;
 import com.gazpacho.recipeservice.model.IngredientEntity;
 import com.gazpacho.recipeservice.model.RecipeEntity;
 import com.gazpacho.recipeservice.model.AllergenEntity;
@@ -10,7 +11,6 @@ import com.gazpacho.recipeservice.service.RecipeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -21,12 +21,16 @@ import static org.mockito.Mockito.*;
 public class RecipeServiceTest {
 
   private RecipeRepository recipeRepository;
+  private AllergenRepository allergenRepository;
+  private IngredientRepository ingredientRepository;
   private RecipeService recipeService;
 
   @BeforeEach
   void setUp() {
     recipeRepository = mock(RecipeRepository.class);
-    recipeService = new RecipeService(recipeRepository);
+    allergenRepository = mock(AllergenRepository.class);
+    ingredientRepository = mock(IngredientRepository.class);
+    recipeService = new RecipeService(recipeRepository, allergenRepository, ingredientRepository);
   }
 
   @Test
@@ -102,10 +106,7 @@ public class RecipeServiceTest {
         allergen.setId(100L);
         allergen.setName("Peanuts");
 
-        IngredientAllergenEntity join = new IngredientAllergenEntity();
-        join.setIngredient(ingredient);
-        join.setAllergen(allergen);
-        ingredient.getIngredientAllergens().add(join);
+        ingredient.getAllergens().add(allergen);
         recipe.getIngredients().add(ingredient);
 
         when(recipeRepository.findAll()).thenReturn(Collections.singletonList(recipe));

@@ -3,6 +3,7 @@ package com.gazpacho.recipeservice.controller;
 import com.gazpacho.sharedlib.dto.RecipeDTO;
 import com.gazpacho.recipeservice.model.RecipeEntity;
 import com.gazpacho.recipeservice.service.RecipeService;
+import com.gazpacho.sharedlib.dto.RequestRecipeDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,17 @@ public class RecipeController {
     this.recipeService = recipeService;
   }
 
+  @PutMapping("/batch")
+  public ResponseEntity<?> addRecipes(@RequestBody List<RequestRecipeDTO> request) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(recipeService.addRecipe(request));
+  }
+
+  @GetMapping("/batch")
+  public ResponseEntity<?> getRecipesBatch(@RequestParam("ids") List<Long> recipeIds) {
+    List<RecipeDTO> recipes = recipeService.getRecipes(recipeIds);
+    return ResponseEntity.ok(recipes);
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<?> viewRecipe(@PathVariable("id") Long recipeId) {
     // unwrapping optional
@@ -27,7 +39,7 @@ public class RecipeController {
     if (maybeRecipe.isPresent()) {
       RecipeEntity recipe = maybeRecipe.get();
       // convert RecipeEntity to RecipeDTO.
-      RecipeDTO dto = new RecipeDTO(recipe.getId(), recipe.getName());
+      RecipeDTO dto = recipe.toDto();
       return ResponseEntity.ok(dto);
     } else {
       // Return 404 Not Found with an error message.

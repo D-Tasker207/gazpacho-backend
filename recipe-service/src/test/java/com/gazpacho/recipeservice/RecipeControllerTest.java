@@ -11,9 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -48,8 +46,8 @@ public class RecipeControllerTest {
     @Test
     void testSearchRecipes_DefaultToRecipeType() throws Exception {
         long testID = 1L;
-        RecipeDTO recipe1 = new RecipeDTO(testID, "Spaghetti");
-        RecipeDTO recipe2 = new RecipeDTO(testID+1, "Spaghetti Bolognese");
+        RecipeDTO recipe1 = new RecipeDTO(testID, "Spaghetti", "https://www.fakeurl.com", new ArrayList<>(), new HashSet<>(), new ArrayList<>(), "");
+        RecipeDTO recipe2 = new RecipeDTO(testID+1, "Spaghetti Bolognese", "https://www.fakeurl.com", new ArrayList<>(), new HashSet<>(), new ArrayList<>(), "");
         List<RecipeDTO> recipes = Arrays.asList(recipe1, recipe2);
 
         Mockito.when(recipeService.searchRecipes("spaghetti", "recipe")).thenReturn(recipes);
@@ -63,7 +61,7 @@ public class RecipeControllerTest {
     @Test
     void testSearchRecipes_ByIngredientType() throws Exception {
         long testID = 3L;
-        RecipeDTO recipe = new RecipeDTO(testID, "Mac & Cheese");
+        RecipeDTO recipe = new RecipeDTO(testID, "Mac & Cheese", "https://www.fakeurl.com", new ArrayList<>(), new HashSet<>(), new ArrayList<>(), "");
         Mockito.when(recipeService.searchRecipes("cheese", "ingredient"))
                 .thenReturn(Arrays.asList(recipe));
 
@@ -76,7 +74,7 @@ public class RecipeControllerTest {
     @Test
     void testSearchRecipes_ByAllergenType() throws Exception {
         long testID = 4L;
-        RecipeDTO recipe = new RecipeDTO(testID, "Peanut Pie");
+        RecipeDTO recipe = new RecipeDTO(testID, "Peanut Pie", "https://www.fakeurl.com", new ArrayList<>(), new HashSet<>(), new ArrayList<>(), "");
         Mockito.when(recipeService.searchRecipes("peanut", "allergen"))
                 .thenReturn(Arrays.asList(recipe));
 
@@ -89,7 +87,7 @@ public class RecipeControllerTest {
     @Test
     void testSearchRecipes_UnknownTypeFallsBack() throws Exception {
         long testID = 5L;
-        RecipeDTO recipe = new RecipeDTO(testID, "Chicken Alfredo");
+        RecipeDTO recipe = new RecipeDTO(testID, "Chicken Alfredo", "https://www.fakeurl.com", new ArrayList<>(), new HashSet<>(), new ArrayList<>(), "");
         Mockito.when(recipeService.searchRecipes("alfredo", "unknown"))
                 .thenReturn(Arrays.asList(recipe));
 

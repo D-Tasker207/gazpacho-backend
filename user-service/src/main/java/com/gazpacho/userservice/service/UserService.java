@@ -2,7 +2,6 @@ package com.gazpacho.userservice.service;
 
 import com.gazpacho.sharedlib.dto.*;
 import com.gazpacho.userservice.model.UserEntity;
-import com.gazpacho.userservice.model.UserRecipeEntity;
 import com.gazpacho.userservice.repository.UserRepository;
 import com.gazpacho.recipeservice.model.RecipeEntity;
 import com.gazpacho.recipeservice.repository.RecipeRepository;
@@ -22,15 +21,13 @@ public class UserService {
   private final UserRepository userRepository;
   private final TokenValidator tokenValidator;
   private final TokenGenerator tokenGenerator;
-  private final RecipeRepository recipeRepository;
   private final BCryptPasswordEncoder passwordEncoder;
 
   public UserService(UserRepository userRepository,
-      TokenGenerator tokenGenerator, TokenValidator tokenValidator, RecipeRepository recipeRepository) {
+      TokenGenerator tokenGenerator, TokenValidator tokenValidator) {
     this.userRepository = userRepository;
     this.tokenGenerator = tokenGenerator;
     this.tokenValidator = tokenValidator;
-    this.recipeRepository = recipeRepository;
     this.passwordEncoder = new BCryptPasswordEncoder();
   
   }
@@ -85,6 +82,18 @@ public class UserService {
         .build());
   }
 
+  public Optional<UserEntity> fetchUserByToken(String token) {
+    if (!token.startsWith("Bearer ")) return Optional.empty();
+    token = token.substring(7);
+    if (!tokenValidator.validateAccessToken(token)) return Optional.empty();
+
+    UserEntity user = userRepository
+            .findById(tokenValidator.getUserIdFromAccessToken(token))
+            .orElse(null);
+    if (user == null) return Optional.empty();
+    else return Optional.of(user);
+  }
+
   public Optional<PublicUserDTO> fetchUser(String token) {
     if (!token.startsWith("Bearer ")) return Optional.empty();
     token = token.substring(7);
@@ -98,9 +107,7 @@ public class UserService {
     return Optional.of(new PublicUserDTO(
         user.getId(),
         user.getEmail(),
-        user.getSavedRecipes().stream()
-            .map(ur -> ur.getRecipe().getId())
-            .collect(Collectors.toList())
+        user.getSavedRecipeIds()
     ));
   }
 
@@ -111,35 +118,43 @@ public class UserService {
       throw new RuntimeException("User not found");
     }
     // Check that the recipe exists.
-    Optional<RecipeEntity> maybeRecipe = recipeRepository.findById(recipeId);
+    /*Optional<RecipeEntity> maybeRecipe = recipeRepository.findById(recipeId);
     if (maybeRecipe.isEmpty()) {
       throw new RuntimeException("Recipe not found");
-    }
+    }*/
     UserEntity user = maybeUser.get();
     // Check if this recipe is already saved (by checking the join collection).
-    boolean alreadySaved = user.getSavedRecipes().stream()
-         .anyMatch(ur -> ur.getRecipe().getId().equals(recipeId));
+    boolean alreadySaved = user.getSavedRecipeIds().stream()
+            .anyMatch(id -> id.equals(recipeId));
     
     if (!alreadySaved) {
       // Create a new join entity.
-      UserRecipeEntity userRecipe = new UserRecipeEntity();
-      userRecipe.setUser(user);
-      userRecipe.setRecipe(maybeRecipe.get());
-      user.getSavedRecipes().add(userRecipe);
+      user.getSavedRecipeIds().add(recipeId);
       userRepository.save(user);
     }
   }
 
   public void removeSavedRecipe(Long userId, Long recipeId) {
-    return;
+    Optional<UserEntity> maybeUser = userRepository.findById(userId);
+    if (maybeUser.isEmpty()) {
+      throw new RuntimeException("User not found");
+    }
+
+    UserEntity user = maybeUser.get();
+
+    boolean saved = user.getSavedRecipeIds().stream()
+            .anyMatch(id -> id.equals(recipeId));
+
+    if (saved) {
+      user.getSavedRecipeIds().remove(recipeId);
+      userRepository.save(user);
+    }
   }
 
   public List<Long> getSavedRecipiesById(Long userId) {
     // For the join approach, return recipe IDs from the join table.
     return userRepository.findById(userId)
-             .map(user -> user.getSavedRecipes().stream()
-                               .map(ur -> ur.getRecipe().getId())
-                               .collect(Collectors.toList()))
+             .map(UserEntity::getSavedRecipeIds)
              .orElse(Collections.emptyList());
   }
 }

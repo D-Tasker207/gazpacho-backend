@@ -28,15 +28,13 @@ class UserServiceTest {
   private TokenGenerator tokenGenerator;
   private TokenValidator tokenValidator;
   private BCryptPasswordEncoder encoder;
-private RecipeRepository recipeRepository;
 
   @BeforeEach
   void setUp() {
     userRepository = mock(UserRepository.class);
-    recipeRepository = mock(RecipeRepository.class);
     tokenGenerator = mock(TokenGenerator.class);
     tokenValidator = mock(TokenValidator.class);
-    userService = new UserService(userRepository, tokenGenerator, tokenValidator, recipeRepository);
+    userService = new UserService(userRepository, tokenGenerator, tokenValidator);
     encoder = new BCryptPasswordEncoder();
   }
 
