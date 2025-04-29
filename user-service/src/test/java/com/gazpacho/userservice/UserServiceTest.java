@@ -10,10 +10,12 @@ import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
+import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import com.gazpacho.userservice.service.UserService;
 import java.util.Optional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,7 @@ class UserServiceTest {
   private UserService userService;
   private TokenGenerator tokenGenerator;
   private TokenValidator tokenValidator;
+  private BCryptPasswordEncoder encoder;
 
   @BeforeEach
   void setUp() {
@@ -32,6 +35,7 @@ class UserServiceTest {
     tokenGenerator = mock(TokenGenerator.class);
     tokenValidator = mock(TokenValidator.class);
     userService = new UserService(userRepository, tokenGenerator, tokenValidator);
+    encoder = new BCryptPasswordEncoder();
   }
 
   @Test
@@ -54,7 +58,8 @@ class UserServiceTest {
 
     assertEquals(1L, savedUser.getId());
     assertEquals("test@example.com", savedUser.getEmail());
-    assertEquals("password123", savedUser.getPassword());
+    //Check that the raw password when hashed matches the stored hash
+    assertTrue(encoder.matches("password123", savedUser.getPassword()));
   }
 
   @Test
@@ -77,7 +82,10 @@ class UserServiceTest {
     UserEntity user = new UserEntity();
     user.setId(1L);
     user.setEmail(dto.getEmail());
-    user.setPassword("password123");
+
+    //simulate stored hash:
+    String hashedPassword = encoder.encode("password123");
+    user.setPassword(hashedPassword);
 
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
     when(userRepository.findByEmail(dto.getEmail()))
@@ -102,7 +110,10 @@ class UserServiceTest {
 
     UserEntity user = new UserEntity();
     user.setEmail(dto.getEmail());
-    user.setPassword("password123");
+
+    //store fake hash for the password
+    String hashedPassword = encoder.encode("password123");
+    user.setPassword(hashedPassword);
 
     when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);
     when(userRepository.findByEmail(dto.getEmail()))

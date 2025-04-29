@@ -1,6 +1,7 @@
 package com.gazpacho.userservice.controller;
 
 import com.gazpacho.sharedlib.dto.*;
+import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
@@ -68,5 +69,34 @@ public class UserController {
     return user
             .map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+  }
+
+  //endpoint for saving a recipe to a user
+  @PostMapping("/recipes/{recipeId}")
+  public ResponseEntity<?> saveRecipe(
+          @RequestHeader(name = HttpHeaders.AUTHORIZATION) String authHeader,
+          @PathVariable("recipeId") Long recipeId) {
+    Optional<UserEntity> userOptional = userService.fetchUserByToken(authHeader);
+    if (userOptional.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    try {
+      userService.saveRecipeForUser(userOptional.get().getId(), recipeId);
+      return ResponseEntity.ok("Recipe saved successfully");
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+  }
+
+  @DeleteMapping("/recipes/{recipeId}")
+  public ResponseEntity<?> deleteSavedRecipe(
+          @RequestHeader(name = HttpHeaders.AUTHORIZATION) String authHeader,
+          @PathVariable("recipeId") Long recipeId) {
+    Optional<UserEntity> userOptional = userService.fetchUserByToken(authHeader);
+    if (userOptional.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    try {
+      userService.removeSavedRecipe(userOptional.get().getId(), recipeId);
+      return ResponseEntity.ok("Recipe saved successfully");
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
   }
 }
