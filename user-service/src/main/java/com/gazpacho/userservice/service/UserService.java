@@ -46,7 +46,7 @@ public class UserService {
 
     UserEntity savedUser = userRepository.save(user);
     // Adapt the DTO constructor as needed.
-    return new PublicUserDTO(savedUser.getId(), savedUser.getEmail(), null);
+    return new PublicUserDTO(savedUser.getId(), savedUser.getEmail(), savedUser.isAdmin(), null);
   }
 
   public Optional<TokenResponseDTO> loginUser(LoginDTO userDto) {
@@ -98,6 +98,7 @@ public class UserService {
     return Optional.of(new PublicUserDTO(
         user.getId(),
         user.getEmail(),
+        user.isAdmin(),
         user.getSavedRecipes().stream()
             .map(ur -> ur.getRecipe().getId())
             .collect(Collectors.toList())

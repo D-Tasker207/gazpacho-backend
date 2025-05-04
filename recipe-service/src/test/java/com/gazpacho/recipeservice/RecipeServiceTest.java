@@ -8,6 +8,8 @@ import com.gazpacho.recipeservice.model.AllergenEntity;
 import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.recipeservice.service.RecipeService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -17,132 +19,167 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
-public class RecipeServiceTest {
 
-  private RecipeRepository recipeRepository;
-  private RecipeService recipeService;
+@DisplayName("RecipeService Unit Tests")
+class RecipeServiceTest {
 
-  @BeforeEach
-  void setUp() {
-    recipeRepository = mock(RecipeRepository.class);
-    recipeService = new RecipeService(recipeRepository);
-  }
+    private RecipeRepository repo;
+    private RecipeService svc;
 
-  @Test
-  void testViewRecipe_Found() {
-    long testID = 1L;
-    RecipeEntity recipe = new RecipeEntity();
-    recipe.setId(testID);
-    recipe.setName("Spaghetti");
-
-    when(recipeRepository.findById(testID)).thenReturn(Optional.of(recipe));
-
-    Optional<RecipeEntity> result = recipeService.viewRecipe(testID);
-    assertTrue(result.isPresent());
-    assertEquals("Spaghetti", result.get().getName());
-  }
-
-    @Test
-    void testViewRecipe_NotFound() {
-        long testID = 1L;
-        when(recipeRepository.findById(testID)).thenReturn(Optional.empty());
-        
-        Optional<RecipeEntity> result = recipeService.viewRecipe(testID);
-        assertFalse(result.isPresent());
+    @BeforeEach
+    void setup() {
+        repo = mock(RecipeRepository.class);
+        svc = new RecipeService(repo);
     }
 
-    @Test
-    void testSearchRecipes_RecipeType() {
-        long testID = 1L;
-        RecipeEntity recipe = new RecipeEntity();
-        recipe.setId(testID);
-        recipe.setName("Spaghetti");
-        when(recipeRepository.findByNameContainingIgnoreCase("spa"))
-                .thenReturn(Collections.singletonList(recipe));
+    @Nested
+    @DisplayName("viewRecipe()")
+    class ViewRecipe {
+        @Test @DisplayName("returns Optional.of(entity) when found")
+        void found() {
+            RecipeEntity e = new RecipeEntity();
+            e.setId(1L);
+            e.setName("Soup");
+            given(repo.findById(1L)).willReturn(Optional.of(e));
 
-        List<RecipeDTO> results = recipeService.searchRecipes("spa", "recipe");
-        assertEquals(1, results.size());
-        assertEquals("Spaghetti", results.get(0).getName());
+            Optional<RecipeEntity> result = svc.viewRecipe(1L);
+            assertTrue(result.isPresent());
+            assertEquals("Soup", result.get().getName());
+        }
+
+        @Test @DisplayName("returns Optional.empty() when missing")
+        void missing() {
+            given(repo.findById(2L)).willReturn(Optional.empty());
+            Optional<RecipeEntity> result = svc.viewRecipe(2L);
+            assertFalse(result.isPresent());
+        }
     }
 
-    @Test
-    void testSearchRecipes_IngredientType() {
-        //simulating a recipe with an ingredient whose name contains the query
-        long testID = 2L;
-        RecipeEntity recipe = new RecipeEntity();
-        recipe.setId(testID);
-        recipe.setName("Mac & Cheese");
+    @Nested
+    @DisplayName("deleteRecipe()")
+    class DeleteRecipe {
+        @Test @DisplayName("deletes when repo.existsById() is true")
+        void deleteWhenPresent() {
+            given(repo.existsById(10L)).willReturn(true);
+            // should not throw
+            svc.deleteRecipe(10L);
+            then(repo).should().deleteById(10L);
+        }
 
-        IngredientEntity ingredient = new IngredientEntity();
-        ingredient.setId(10L);
-        ingredient.setName("Cheddar Cheese");
-        recipe.getIngredients().add(ingredient);
-
-        when(recipeRepository.findAll()).thenReturn(Collections.singletonList(recipe));
-
-        List<RecipeDTO> results = recipeService.searchRecipes("cheese", "ingredient");
-        assertEquals(1, results.size());
-        assertEquals("Mac & Cheese", results.get(0).getName());
+        @Test @DisplayName("throws RuntimeException(\"Recipe not found\") when missing")
+        void throwsWhenMissing() {
+            given(repo.existsById(20L)).willReturn(false);
+            RuntimeException ex = assertThrows(RuntimeException.class, () -> svc.deleteRecipe(20L));
+            assertEquals("Recipe not found", ex.getMessage());
+        }
     }
 
-    @Test
-    void testSearchRecipes_AllergenType() {
-        //simulate a recipe with an ingredient that has an allergen join matching the query
-        long testID = 3L;
-        RecipeEntity recipe = new RecipeEntity();
-        recipe.setId(testID);
-        recipe.setName("Peanut Pie");
+    @Nested
+    @DisplayName("searchRecipes(query, type)")
+    class SearchByType {
+        @Test @DisplayName("type=\"recipe\" uses findByNameContainingIgnoreCase")
+        void recipeType() {
+            RecipeEntity e = new RecipeEntity();
+            e.setId(1L);
+            e.setName("Pie");
+            given(repo.findByNameContainingIgnoreCase("pi")).willReturn(List.of(e));
 
-        IngredientEntity ingredient = new IngredientEntity();
-        ingredient.setId(20L);
-        ingredient.setName("All-Purpose Flour");
+            List<RecipeDTO> out = svc.searchRecipes("pi", "recipe");
+            assertEquals(1, out.size());
+            assertEquals(1L, out.get(0).getId());
+            assertEquals("Pie", out.get(0).getName());
+        }
 
-        AllergenEntity allergen = new AllergenEntity();
-        allergen.setId(100L);
-        allergen.setName("Peanuts");
+        @Test @DisplayName("type=\"ingredient\" filters findAll() by ingredient.name")
+        void ingredientType() {
+            RecipeEntity r = new RecipeEntity();
+            r.setId(2L);
+            r.setName("Cheesy Pasta");
+            IngredientEntity ing = new IngredientEntity();
+            ing.setName("Cheddar Cheese");
+            r.getIngredients().add(ing);
+            given(repo.findAll()).willReturn(List.of(r));
 
-        IngredientAllergenEntity join = new IngredientAllergenEntity();
-        join.setIngredient(ingredient);
-        join.setAllergen(allergen);
-        ingredient.getIngredientAllergens().add(join);
-        recipe.getIngredients().add(ingredient);
+            List<RecipeDTO> out = svc.searchRecipes("cheese", "ingredient");
+            assertEquals(1, out.size());
+            assertEquals("Cheesy Pasta", out.get(0).getName());
+        }
 
-        when(recipeRepository.findAll()).thenReturn(Collections.singletonList(recipe));
+        @Test @DisplayName("type=\"ingredient\" yields empty when none match")
+        void ingredientTypeNoMatch() {
+            given(repo.findAll()).willReturn(List.of());
+            List<RecipeDTO> out = svc.searchRecipes("any", "ingredient");
+            assertTrue(out.isEmpty());
+        }
 
-        List<RecipeDTO> results = recipeService.searchRecipes("peanut", "allergen");
-        assertEquals(1, results.size());
-        assertEquals("Peanut Pie", results.get(0).getName());
+        @Test @DisplayName("type=\"allergen\" filters findAll() by allergen.name")
+        void allergenType() {
+            RecipeEntity r = new RecipeEntity();
+            r.setId(3L);
+            r.setName("Nutty Cake");
+            IngredientEntity ing = new IngredientEntity();
+            AllergenEntity allergen = new AllergenEntity();
+            allergen.setName("Peanut");
+            IngredientAllergenEntity join = new IngredientAllergenEntity();
+            join.setIngredient(ing);
+            join.setAllergen(allergen);
+            ing.getIngredientAllergens().add(join);
+            r.getIngredients().add(ing);
+
+            given(repo.findAll()).willReturn(List.of(r));
+
+            List<RecipeDTO> out = svc.searchRecipes("peanut", "allergen");
+            assertEquals(1, out.size());
+            assertEquals("Nutty Cake", out.get(0).getName());
+        }
+
+        @Test @DisplayName("type=\"allergen\" yields empty when none match")
+        void allergenTypeNoMatch() {
+            given(repo.findAll()).willReturn(List.of());
+            List<RecipeDTO> out = svc.searchRecipes("none", "allergen");
+            assertTrue(out.isEmpty());
+        }
+
+        @Test @DisplayName("unknown type falls back to recipe search")
+        void unknownTypeFallback() {
+            RecipeEntity e = new RecipeEntity();
+            e.setId(4L);
+            e.setName("Fallback Stew");
+            given(repo.findByNameContainingIgnoreCase("foo"))
+                .willReturn(List.of(e));
+
+            List<RecipeDTO> out = svc.searchRecipes("foo", "whoknows");
+            assertEquals(1, out.size());
+            assertEquals("Fallback Stew", out.get(0).getName());
+        }
     }
 
-    @Test
-    void testSearchRecipes_UnknownTypeFallsBack() {
-        //check for unknown type
-        long testID = 4L;
-        RecipeEntity recipe = new RecipeEntity();
-        recipe.setId(testID);
-        recipe.setName("Chicken Alfredo");
-        when(recipeRepository.findByNameContainingIgnoreCase("alfredo"))
-                .thenReturn(Collections.singletonList(recipe));
+    @Nested
+    @DisplayName("searchRecipes(query) — overloaded default")
+    class DefaultSearch {
+        @Test @DisplayName("delegates to searchRecipes(query, \"recipe\")")
+        void defaultDelegates() {
+            RecipeEntity e = new RecipeEntity();
+            e.setId(5L);
+            e.setName("Default Dish");
+            // stub the two-arg method
+            given(repo.findByNameContainingIgnoreCase("def"))
+                .willReturn(List.of(e));
 
-        List<RecipeDTO> results = recipeService.searchRecipes("alfredo", "unknown");
-        assertEquals(1, results.size());
-        assertEquals("Chicken Alfredo", results.get(0).getName());
+            // call the one-arg overload
+            List<RecipeDTO> out = svc.searchRecipes("def");
+            assertEquals(1, out.size());
+            assertEquals(5L, out.get(0).getId());
+        }
+
+        @Test @DisplayName("returns empty list when no matches for default search")
+        void defaultEmpty() {
+            given(repo.findByNameContainingIgnoreCase("missing"))
+                .willReturn(Collections.emptyList());
+            List<RecipeDTO> out = svc.searchRecipes("missing");
+            assertTrue(out.isEmpty());
+        }
     }
-    
-    @Test
-    void testSearchRecipes_DefaultSearch() {
-        //check that the overloaded default is be used here
-        long testID = 1L;
-        RecipeEntity recipe = new RecipeEntity();
-        recipe.setId(testID);
-        recipe.setName("Spaghetti");
-
-        when(recipeRepository.findByNameContainingIgnoreCase("spa"))
-                .thenReturn(Collections.singletonList(recipe));
-
-    List<RecipeDTO> results = recipeService.searchRecipes("spa");
-    assertEquals(1, results.size());
-    assertEquals("Spaghetti", results.get(0).getName());
-  }
 }

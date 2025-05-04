@@ -3,22 +3,29 @@ package com.gazpacho.userservice;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
 import com.gazpacho.sharedlib.dto.PublicUserDTO;
 import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
+import com.gazpacho.userservice.model.UserRecipeEntity;
 import com.gazpacho.userservice.repository.UserRepository;
+import com.gazpacho.recipeservice.model.RecipeEntity;
 import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import com.gazpacho.userservice.service.UserService;
 import java.util.Optional;
+import java.util.List;
+import java.util.Collections;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Nested;
 import org.mockito.ArgumentCaptor;
 
 class UserServiceTest {
@@ -28,7 +35,7 @@ class UserServiceTest {
   private TokenGenerator tokenGenerator;
   private TokenValidator tokenValidator;
   private BCryptPasswordEncoder encoder;
-private RecipeRepository recipeRepository;
+  private RecipeRepository recipeRepository;
 
   @BeforeEach
   void setUp() {
@@ -51,7 +58,7 @@ private RecipeRepository recipeRepository;
           return user;
         });
 
-    userService.registerUser(dto);
+    PublicUserDTO out = userService.registerUser(dto);
 
     ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository).save(userCaptor.capture());
@@ -62,6 +69,9 @@ private RecipeRepository recipeRepository;
     assertEquals("test@example.com", savedUser.getEmail());
     //Check that the raw password when hashed matches the stored hash
     assertTrue(encoder.matches("password123", savedUser.getPassword()));
+    assertEquals(1L, out.getId());
+    //Ensure that newly registered users are not admins by default
+    assertFalse(out.isAdmin(), "new users default to non-admin");
   }
 
   @Test
@@ -247,4 +257,84 @@ private RecipeRepository recipeRepository;
 
     assertTrue(result.isEmpty());
   }
+    @Nested @DisplayName("saveRecipeForUser()")
+    class SaveRecipe {
+        @Test @DisplayName("throws when user missing")
+        void userMissing() {
+            given(userRepository.findById(77L)).willReturn(Optional.empty());
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> userService.saveRecipeForUser(77L, 1L));
+            assertEquals("User not found", ex.getMessage());
+        }
+
+        @Test @DisplayName("throws when recipe missing")
+        void recipeMissing() {
+            UserEntity u = new UserEntity(); u.setId(8L);
+            given(userRepository.findById(8L)).willReturn(Optional.of(u));
+            given(recipeRepository.findById(5L)).willReturn(Optional.empty());
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> userService.saveRecipeForUser(8L, 5L));
+            assertEquals("Recipe not found", ex.getMessage());
+        }
+
+        @Test @DisplayName("adds join when first save")
+        void firstSave() {
+            UserEntity u = new UserEntity(); u.setId(9L);
+            RecipeEntity r = new RecipeEntity(); r.setId(2L);
+            given(userRepository.findById(9L)).willReturn(Optional.of(u));
+            given(recipeRepository.findById(2L)).willReturn(Optional.of(r));
+
+            userService.saveRecipeForUser(9L, 2L);
+
+            // should have one join and a save
+            assertEquals(1, u.getSavedRecipes().size());
+            then(userRepository).should().save(u);
+        }
+
+        @Test @DisplayName("no duplicate join on second save")
+        void noDuplicate() {
+            UserEntity u = new UserEntity(); u.setId(9L);
+            RecipeEntity r = new RecipeEntity(); r.setId(3L);
+            UserRecipeEntity ur = new UserRecipeEntity();
+            ur.setRecipe(r);
+            ur.setUser(u);
+            u.getSavedRecipes().add(ur);
+
+            given(userRepository.findById(9L)).willReturn(Optional.of(u));
+            given(recipeRepository.findById(3L)).willReturn(Optional.of(r));
+
+            userService.saveRecipeForUser(9L, 3L);
+            assertEquals(1, u.getSavedRecipes().size());
+            then(userRepository).should(never()).save(u);
+        }
+    }
+
+    @Nested @DisplayName("getSavedRecipiesById()")
+    class GetSaved {
+        @Test @DisplayName("empty list when user missing")
+        void userMissing() {
+            given(userRepository.findById(99L)).willReturn(Optional.empty());
+            assertTrue(userService.getSavedRecipiesById(99L).isEmpty());
+        }
+
+        @Test @DisplayName("returns all saved IDs when present")
+        void success() {
+            UserEntity u = new UserEntity(); u.setId(4L);
+            RecipeEntity r1 = new RecipeEntity(); r1.setId(10L);
+            RecipeEntity r2 = new RecipeEntity(); r2.setId(11L);
+            UserRecipeEntity ur1 = new UserRecipeEntity();
+            ur1.setRecipe(r1); ur1.setUser(u);
+            UserRecipeEntity ur2 = new UserRecipeEntity();
+            ur2.setRecipe(r2); ur2.setUser(u);
+            u.getSavedRecipes().add(ur1);
+            u.getSavedRecipes().add(ur2);
+
+            given(userRepository.findById(4L)).willReturn(Optional.of(u));
+            var out = userService.getSavedRecipiesById(4L);
+
+            assertEquals(2, out.size());
+            assertTrue(out.containsAll(List.of(10L,11L)));
+        }
+    }
 }

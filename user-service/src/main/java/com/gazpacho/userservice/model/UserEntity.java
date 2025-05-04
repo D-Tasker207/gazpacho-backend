@@ -34,6 +34,10 @@ public class UserEntity {
   private String email;
   private String password;
 
+  //admin flag, default to false for new users
+  @Column(nullable = false)
+  private boolean admin = false;
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<UserRecipeEntity> savedRecipes = new HashSet<>();
 }
