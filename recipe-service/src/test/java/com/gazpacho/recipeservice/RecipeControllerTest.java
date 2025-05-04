@@ -8,10 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,7 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
+
+import java.util.*;
 
 import com.gazpacho.recipeservice.controller.RecipeController;
 import com.gazpacho.recipeservice.model.RecipeEntity;
@@ -77,8 +76,24 @@ public class RecipeControllerTest {
       @Test
       @DisplayName("defaults to recipe-name search when no type is given")
       void defaultSearchByName() throws Exception {
-          RecipeDTO r1 = new RecipeDTO(1L, "Spaghetti");
-          RecipeDTO r2 = new RecipeDTO(2L, "Spaghetti Bolognese");
+          RecipeDTO r1 = new RecipeDTO(
+            1L,
+            "Spaghetti",
+            null,
+            List.of(),
+            Set.of(),
+            List.of(),
+            null
+          );
+          RecipeDTO r2 = new RecipeDTO(
+            2L,
+            "Spaghetti Bolognese",
+            null,
+            List.of(),
+            Set.of(),
+            List.of(),
+            null
+          );
           when(recipeService.searchRecipes("spaghetti", "recipe"))
               .thenReturn(List.of(r1, r2));
 
@@ -95,7 +110,15 @@ public class RecipeControllerTest {
       //searching by ingredient 
       @DisplayName("searches by ingredient when type=ingredient")
       void searchByIngredient() throws Exception {
-          RecipeDTO cheeseDish = new RecipeDTO(3L, "Mac & Cheese");
+          RecipeDTO cheeseDish = new RecipeDTO(
+            3L,
+            "Mac & Cheese",
+            null,
+            List.of(),
+            Set.of(),
+            List.of(),
+            null
+          );
           when(recipeService.searchRecipes("cheese", "ingredient"))
               .thenReturn(List.of(cheeseDish));
 
@@ -112,7 +135,15 @@ public class RecipeControllerTest {
       //searching by allergen
       @DisplayName("searches by allergen when type=allergen")
       void searchByAllergen() throws Exception {
-          RecipeDTO peanutPie = new RecipeDTO(4L, "Peanut Pie");
+          RecipeDTO peanutPie = new RecipeDTO(
+            4L,
+            "Peanut Pie",
+            null,
+            List.of(),
+            Set.of(),
+            List.of(),
+            null
+          );
           when(recipeService.searchRecipes("peanut", "allergen"))
               .thenReturn(List.of(peanutPie));
 
@@ -129,7 +160,15 @@ public class RecipeControllerTest {
       //test automatic fall back to recipe name when no type given 
       @DisplayName("unknown type falls back to recipe-name search")
       void unknownTypeFallback() throws Exception {
-          RecipeDTO alfredo = new RecipeDTO(5L, "Chicken Alfredo");
+          RecipeDTO alfredo = new RecipeDTO(
+            5L,
+            "Chicken Alfredo",
+            null,
+            List.of(),
+            Set.of(),
+            List.of(),
+            null
+          );
           when(recipeService.searchRecipes("alfredo", "unknown"))
               .thenReturn(List.of(alfredo));
 

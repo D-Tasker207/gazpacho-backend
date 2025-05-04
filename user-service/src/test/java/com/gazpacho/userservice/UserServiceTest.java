@@ -10,16 +10,12 @@ import com.gazpacho.sharedlib.dto.PublicUserDTO;
 import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
-import com.gazpacho.userservice.model.UserRecipeEntity;
 import com.gazpacho.userservice.repository.UserRepository;
-import com.gazpacho.recipeservice.model.RecipeEntity;
-import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import com.gazpacho.userservice.service.UserService;
 import java.util.Optional;
 import java.util.List;
-import java.util.Collections;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -35,15 +31,13 @@ class UserServiceTest {
   private TokenGenerator tokenGenerator;
   private TokenValidator tokenValidator;
   private BCryptPasswordEncoder encoder;
-  private RecipeRepository recipeRepository;
 
   @BeforeEach
   void setUp() {
     userRepository = mock(UserRepository.class);
-    recipeRepository = mock(RecipeRepository.class);
     tokenGenerator = mock(TokenGenerator.class);
     tokenValidator = mock(TokenValidator.class);
-    userService = new UserService(userRepository, tokenGenerator, tokenValidator, recipeRepository);
+    userService = new UserService(userRepository, tokenGenerator, tokenValidator);
     encoder = new BCryptPasswordEncoder();
   }
 
@@ -259,82 +253,64 @@ class UserServiceTest {
   }
     @Nested @DisplayName("saveRecipeForUser()")
     class SaveRecipe {
-        @Test @DisplayName("throws when user missing")
-        void userMissing() {
-            given(userRepository.findById(77L)).willReturn(Optional.empty());
-            RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> userService.saveRecipeForUser(77L, 1L));
-            assertEquals("User not found", ex.getMessage());
-        }
+      @Test @DisplayName("throws when user missing")
+      void userMissing() {
+          given(userRepository.findById(77L)).willReturn(Optional.empty());
+  
+          RuntimeException ex = assertThrows(RuntimeException.class,
+              () -> userService.saveRecipeForUser(77L, 1L));
+  
+          assertEquals("User not found", ex.getMessage());
+      }
 
-        @Test @DisplayName("throws when recipe missing")
-        void recipeMissing() {
-            UserEntity u = new UserEntity(); u.setId(8L);
-            given(userRepository.findById(8L)).willReturn(Optional.of(u));
-            given(recipeRepository.findById(5L)).willReturn(Optional.empty());
+      @Test @DisplayName("adds id when first save")
+      void firstSave() {
+          UserEntity u = new UserEntity();
+          u.setId(9L);
 
-            RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> userService.saveRecipeForUser(8L, 5L));
-            assertEquals("Recipe not found", ex.getMessage());
-        }
+          given(userRepository.findById(9L)).willReturn(Optional.of(u));
 
-        @Test @DisplayName("adds join when first save")
-        void firstSave() {
-            UserEntity u = new UserEntity(); u.setId(9L);
-            RecipeEntity r = new RecipeEntity(); r.setId(2L);
-            given(userRepository.findById(9L)).willReturn(Optional.of(u));
-            given(recipeRepository.findById(2L)).willReturn(Optional.of(r));
+          userService.saveRecipeForUser(9L, 2L);
 
-            userService.saveRecipeForUser(9L, 2L);
+          assertEquals(List.of(2L), u.getSavedRecipeIds());
+          then(userRepository).should().save(u);
+      }
 
-            // should have one join and a save
-            assertEquals(1, u.getSavedRecipes().size());
-            then(userRepository).should().save(u);
-        }
+      @Test @DisplayName("no duplicate id on second save")
+      void noDuplicate() {
+          UserEntity u = new UserEntity();
+          u.setId(9L);
+          u.getSavedRecipeIds().add(3L);   // already saved
 
-        @Test @DisplayName("no duplicate join on second save")
-        void noDuplicate() {
-            UserEntity u = new UserEntity(); u.setId(9L);
-            RecipeEntity r = new RecipeEntity(); r.setId(3L);
-            UserRecipeEntity ur = new UserRecipeEntity();
-            ur.setRecipe(r);
-            ur.setUser(u);
-            u.getSavedRecipes().add(ur);
+          given(userRepository.findById(9L)).willReturn(Optional.of(u));
 
-            given(userRepository.findById(9L)).willReturn(Optional.of(u));
-            given(recipeRepository.findById(3L)).willReturn(Optional.of(r));
+          userService.saveRecipeForUser(9L, 3L);
 
-            userService.saveRecipeForUser(9L, 3L);
-            assertEquals(1, u.getSavedRecipes().size());
-            then(userRepository).should(never()).save(u);
-        }
-    }
+          assertEquals(1, u.getSavedRecipeIds().size());
+          then(userRepository).should(never()).save(u);
+      }
+  }
 
     @Nested @DisplayName("getSavedRecipiesById()")
     class GetSaved {
-        @Test @DisplayName("empty list when user missing")
-        void userMissing() {
-            given(userRepository.findById(99L)).willReturn(Optional.empty());
-            assertTrue(userService.getSavedRecipiesById(99L).isEmpty());
-        }
+      @Test @DisplayName("empty list when user missing")
+      void userMissing() {
+          given(userRepository.findById(99L)).willReturn(Optional.empty());
+          assertTrue(userService.getSavedRecipiesById(99L).isEmpty());
+      }
 
-        @Test @DisplayName("returns all saved IDs when present")
-        void success() {
-            UserEntity u = new UserEntity(); u.setId(4L);
-            RecipeEntity r1 = new RecipeEntity(); r1.setId(10L);
-            RecipeEntity r2 = new RecipeEntity(); r2.setId(11L);
-            UserRecipeEntity ur1 = new UserRecipeEntity();
-            ur1.setRecipe(r1); ur1.setUser(u);
-            UserRecipeEntity ur2 = new UserRecipeEntity();
-            ur2.setRecipe(r2); ur2.setUser(u);
-            u.getSavedRecipes().add(ur1);
-            u.getSavedRecipes().add(ur2);
+      @Test @DisplayName("returns all saved IDs when present")
+      void success() {
+          UserEntity u = new UserEntity();
+          u.setId(4L);
+          u.getSavedRecipeIds().addAll(List.of(10L, 11L));
 
-            given(userRepository.findById(4L)).willReturn(Optional.of(u));
-            var out = userService.getSavedRecipiesById(4L);
+          given(userRepository.findById(4L)).willReturn(Optional.of(u));
 
-            assertEquals(2, out.size());
-            assertTrue(out.containsAll(List.of(10L,11L)));
-        }
+          var out = userService.getSavedRecipiesById(4L);
+
+          assertEquals(2, out.size());
+          assertTrue(out.containsAll(List.of(10L, 11L)));
     }
+  }
 }

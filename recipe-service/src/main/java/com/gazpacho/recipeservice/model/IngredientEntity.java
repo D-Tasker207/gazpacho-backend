@@ -21,6 +21,11 @@ public class IngredientEntity {
 
     private String name;
 
-    @OneToMany(mappedBy = "ingredient", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<IngredientAllergenEntity> ingredientAllergens = new HashSet<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "ingredient_allergens",
+            joinColumns = @JoinColumn(name = "ingredient_id"),
+            inverseJoinColumns = @JoinColumn(name = "allergen_id")
+    )
+    private Set<AllergenEntity> allergens = new HashSet<>();
 }
