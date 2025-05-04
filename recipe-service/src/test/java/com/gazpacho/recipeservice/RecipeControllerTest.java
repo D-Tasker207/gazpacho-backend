@@ -83,7 +83,8 @@ public class RecipeControllerTest {
             List.of(),
             Set.of(),
             List.of(),
-            null
+            null,
+            Set.of()
           );
           RecipeDTO r2 = new RecipeDTO(
             2L,
@@ -92,7 +93,8 @@ public class RecipeControllerTest {
             List.of(),
             Set.of(),
             List.of(),
-            null
+            null, 
+            Set.of()
           );
           when(recipeService.searchRecipes("spaghetti", "recipe"))
               .thenReturn(List.of(r1, r2));
@@ -117,7 +119,8 @@ public class RecipeControllerTest {
             List.of(),
             Set.of(),
             List.of(),
-            null
+            null,
+            Set.of()
           );
           when(recipeService.searchRecipes("cheese", "ingredient"))
               .thenReturn(List.of(cheeseDish));
@@ -142,7 +145,8 @@ public class RecipeControllerTest {
             List.of(),
             Set.of(),
             List.of(),
-            null
+            null,
+            Set.of()
           );
           when(recipeService.searchRecipes("peanut", "allergen"))
               .thenReturn(List.of(peanutPie));
@@ -167,7 +171,8 @@ public class RecipeControllerTest {
             List.of(),
             Set.of(),
             List.of(),
-            null
+            null,
+            Set.of()
           );
           when(recipeService.searchRecipes("alfredo", "unknown"))
               .thenReturn(List.of(alfredo));

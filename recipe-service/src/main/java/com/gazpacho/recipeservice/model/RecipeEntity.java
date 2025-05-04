@@ -44,6 +44,15 @@ public class RecipeEntity {
     @Column(name = "step")
     private List<String> steps = new ArrayList<>();
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+      name = "recipe_tags",
+      joinColumns = @JoinColumn(name = "recipe_id"),
+      inverseJoinColumns = @JoinColumn(name = "tag_id"),
+      uniqueConstraints = @UniqueConstraint(columnNames = {"recipe_id","tag_id"})
+    )
+    private Set<TagEntity> tags = new HashSet<>();
+
     public RecipeDTO toDto() {
         return new RecipeDTO(
                 getId(),
@@ -54,7 +63,8 @@ public class RecipeEntity {
                         .flatMap(ing -> ing.getAllergens().stream().map(AllergenEntity::getName))
                         .collect(Collectors.toSet()),
                 getSteps(),
-                getDescription()
+                getDescription(),
+                tags.stream().map(TagEntity::getName).collect(Collectors.toSet())
         );
     }
 }

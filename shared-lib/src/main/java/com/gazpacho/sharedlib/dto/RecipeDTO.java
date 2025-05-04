@@ -18,4 +18,5 @@ public class RecipeDTO {
     private Set<String> allergens;
     private List<String> steps;
     private String description;
+    private Set<String> tags;
 }
