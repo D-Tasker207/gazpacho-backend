@@ -1,10 +1,13 @@
 package com.gazpacho.recipeservice.controller;
 
+import com.gazpacho.sharedlib.dto.PublicUserDTO;
+import com.gazpacho.userservice.service.UserService;
 import com.gazpacho.sharedlib.dto.RecipeDTO;
 import com.gazpacho.recipeservice.model.RecipeEntity;
 import com.gazpacho.recipeservice.service.RecipeService;
 import com.gazpacho.sharedlib.dto.RequestRecipeDTO;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +20,13 @@ public class RecipeController {
 
   private final RecipeService recipeService;
 
-  public RecipeController(RecipeService recipeService) {
+  //include a UserService instance to check isAdmin flag for privileged actions (Ex. Delete recipe)
+  //So long as users must be logged in to access site, this should be sufficient?
+  private final UserService userService;
+
+  public RecipeController(RecipeService recipeService, UserService userService) {
     this.recipeService = recipeService;
+    this.userService = userService;
   }
 
   @PutMapping("/batch")
@@ -50,14 +58,27 @@ public class RecipeController {
 
     //DELETE endpoint for deleting a recipe:
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteRecipe(@PathVariable("id") Long recipeId) {
-        // TODO: Add admin access validation here if we want
-        try {
-            recipeService.deleteRecipe(recipeId);
-            return ResponseEntity.ok("Recipe deleted successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    public ResponseEntity<?> deleteRecipe(
+      @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+      @PathVariable("id") Long recipeId
+      ) {
+        //validate bearer token and fetch user to check admin status
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+          return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+        Optional<PublicUserDTO> user = userService.fetchUser(authHeader);
+        if (user.isEmpty() || !Boolean.TRUE.equals(user.get().isAdmin())) {
+          return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+      //if user is an admin, perform delete operation
+      try {
+        recipeService.deleteRecipe(recipeId);
+        return ResponseEntity.ok("Recipe deleted successfully");
+      } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body("Error deleting recipe: " + e.getMessage());
+      }
     }
 
   //segmented search: by recipe, ingredient, or allergen.(Added recipe as default)

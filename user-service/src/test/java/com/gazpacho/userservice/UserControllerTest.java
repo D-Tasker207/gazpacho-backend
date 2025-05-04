@@ -140,11 +140,12 @@ class UserControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  //TODO: Fix the lack of an admin parameter here
   @Test
   void testFetchUser_ValidTokenString() throws Exception {
     String validTokenString = "Bearer valid.token.string";
     when(userService.fetchUser(validTokenString))
-            .thenReturn(Optional.of(new PublicUserDTO(1L, "testemail@gmail.com", new ArrayList<>())));
+            .thenReturn(Optional.of(new PublicUserDTO(1L, "testemail@gmail.com", false, new ArrayList<>())));
 
     mockMvc.perform(get("/users")
                     .header("Authorization", validTokenString))
