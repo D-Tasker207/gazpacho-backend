@@ -23,7 +23,7 @@ public class RecipeEntity {
     @Column
     private String name;
 
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     @Column

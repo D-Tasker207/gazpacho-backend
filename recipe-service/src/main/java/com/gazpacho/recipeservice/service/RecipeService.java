@@ -64,8 +64,8 @@ public class RecipeService {
         } else if ("allergen".equalsIgnoreCase(type)) {
             return recipeRepository.findAll().stream()
                     .filter(recipe -> recipe.getIngredients().stream()
-                            .anyMatch(ingredient -> ingredient.getAllergens().stream()
-                                    .anyMatch(all ->
+                            .allMatch(ingredient -> ingredient.getAllergens().stream()
+                                    .noneMatch(all ->
                                             all != null &&
                                                     all.getName() != null &&
                                                     all.getName().toLowerCase().contains(query.toLowerCase()))))
