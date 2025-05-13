@@ -12,5 +12,7 @@ import java.util.List;
 public class PublicUserDTO {
   private Long id;
   private String email;
+  //new admin flag
+  private boolean admin; 
   private List<Long> savedRecipeIds;
 }

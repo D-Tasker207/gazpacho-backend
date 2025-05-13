@@ -1,6 +1,5 @@
 package com.gazpacho.userservice;
 
-import com.gazpacho.sharedlib.dto.PublicUserDTO;
 import com.gazpacho.userservice.controller.UserController;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.service.UserService;
@@ -10,7 +9,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.eq;

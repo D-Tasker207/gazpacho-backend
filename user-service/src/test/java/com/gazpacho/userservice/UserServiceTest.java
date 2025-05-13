@@ -3,6 +3,7 @@ package com.gazpacho.userservice;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 import com.gazpacho.sharedlib.dto.LoginDTO;
 import com.gazpacho.sharedlib.dto.PublicUserDTO;
@@ -10,15 +11,17 @@ import com.gazpacho.sharedlib.dto.RefreshRequestDTO;
 import com.gazpacho.sharedlib.dto.TokenResponseDTO;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
-import com.gazpacho.recipeservice.repository.RecipeRepository;
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import com.gazpacho.userservice.service.UserService;
 import java.util.Optional;
+import java.util.List;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Nested;
 import org.mockito.ArgumentCaptor;
 
 class UserServiceTest {
@@ -49,7 +52,7 @@ class UserServiceTest {
           return user;
         });
 
-    userService.registerUser(dto);
+    PublicUserDTO out = userService.registerUser(dto);
 
     ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository).save(userCaptor.capture());
@@ -60,6 +63,9 @@ class UserServiceTest {
     assertEquals("test@example.com", savedUser.getEmail());
     //Check that the raw password when hashed matches the stored hash
     assertTrue(encoder.matches("password123", savedUser.getPassword()));
+    assertEquals(1L, out.getId());
+    //Ensure that newly registered users are not admins by default
+    assertFalse(out.isAdmin(), "new users default to non-admin");
   }
 
   @Test
@@ -244,5 +250,67 @@ class UserServiceTest {
     Optional<PublicUserDTO> result = userService.fetchUser(authHeader);
 
     assertTrue(result.isEmpty());
+  }
+    @Nested @DisplayName("saveRecipeForUser()")
+    class SaveRecipe {
+      @Test @DisplayName("throws when user missing")
+      void userMissing() {
+          given(userRepository.findById(77L)).willReturn(Optional.empty());
+  
+          RuntimeException ex = assertThrows(RuntimeException.class,
+              () -> userService.saveRecipeForUser(77L, 1L));
+  
+          assertEquals("User not found", ex.getMessage());
+      }
+
+      @Test @DisplayName("adds id when first save")
+      void firstSave() {
+          UserEntity u = new UserEntity();
+          u.setId(9L);
+
+          given(userRepository.findById(9L)).willReturn(Optional.of(u));
+
+          userService.saveRecipeForUser(9L, 2L);
+
+          assertEquals(List.of(2L), u.getSavedRecipeIds());
+          then(userRepository).should().save(u);
+      }
+
+      @Test @DisplayName("no duplicate id on second save")
+      void noDuplicate() {
+          UserEntity u = new UserEntity();
+          u.setId(9L);
+          u.getSavedRecipeIds().add(3L);   // already saved
+
+          given(userRepository.findById(9L)).willReturn(Optional.of(u));
+
+          userService.saveRecipeForUser(9L, 3L);
+
+          assertEquals(1, u.getSavedRecipeIds().size());
+          then(userRepository).should(never()).save(u);
+      }
+  }
+
+    @Nested @DisplayName("getSavedRecipiesById()")
+    class GetSaved {
+      @Test @DisplayName("empty list when user missing")
+      void userMissing() {
+          given(userRepository.findById(99L)).willReturn(Optional.empty());
+          assertTrue(userService.getSavedRecipiesById(99L).isEmpty());
+      }
+
+      @Test @DisplayName("returns all saved IDs when present")
+      void success() {
+          UserEntity u = new UserEntity();
+          u.setId(4L);
+          u.getSavedRecipeIds().addAll(List.of(10L, 11L));
+
+          given(userRepository.findById(4L)).willReturn(Optional.of(u));
+
+          var out = userService.getSavedRecipiesById(4L);
+
+          assertEquals(2, out.size());
+          assertTrue(out.containsAll(List.of(10L, 11L)));
+    }
   }
 }

@@ -35,8 +35,14 @@ public class UserEntity {
   private String email;
   private String password;
 
+
+  //admin flag, default to false for new users
+  @Column(nullable = false)
+  private boolean admin = false;
+
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "user_saved_recipes", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "recipe_id")
   private List<Long> savedRecipeIds = new ArrayList<>();
+
 }

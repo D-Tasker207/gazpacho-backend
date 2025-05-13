@@ -3,8 +3,7 @@ package com.gazpacho.userservice.service;
 import com.gazpacho.sharedlib.dto.*;
 import com.gazpacho.userservice.model.UserEntity;
 import com.gazpacho.userservice.repository.UserRepository;
-import com.gazpacho.recipeservice.model.RecipeEntity;
-import com.gazpacho.recipeservice.repository.RecipeRepository;
+
 import com.gazpacho.userservice.security.TokenGenerator;
 import com.gazpacho.userservice.security.TokenValidator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -43,7 +41,7 @@ public class UserService {
 
     UserEntity savedUser = userRepository.save(user);
     // Adapt the DTO constructor as needed.
-    return new PublicUserDTO(savedUser.getId(), savedUser.getEmail(), null);
+    return new PublicUserDTO(savedUser.getId(), savedUser.getEmail(), savedUser.isAdmin(), null);
   }
 
   public Optional<TokenResponseDTO> loginUser(LoginDTO userDto) {
@@ -105,10 +103,11 @@ public class UserService {
     if (user == null) return Optional.empty();
 
     return Optional.of(new PublicUserDTO(
-        user.getId(),
-        user.getEmail(),
-        user.getSavedRecipeIds()
-    ));
+      user.getId(),
+      user.getEmail(),
+      user.isAdmin(),
+      user.getSavedRecipeIds()
+));
   }
 
   // New implementation using join entity for saving a recipe.
